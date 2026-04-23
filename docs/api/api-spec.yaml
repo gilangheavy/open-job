@@ -1,0 +1,1450 @@
+openapi: 3.0.3
+info:
+  title: OpenJob API
+  description: Enterprise-scale RESTful API for the OpenJob recruitment platform. Supports job postings, applications, candidate profiles, and document management with Redis caching and RabbitMQ asynchronous email notifications.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local Development Server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+    
+    SuccessMessageResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Operation completed successfully
+
+    FailResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Internal server error
+
+    UserRegistration:
+      type: object
+      required:
+        - fullname
+        - email
+        - password
+      properties:
+        fullname:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    LoginPayload:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    CompanyPayload:
+      type: object
+      required:
+        - name
+        - location
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+
+    CategoryPayload:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    JobPayload:
+      type: object
+      required:
+        - title
+        - companyId
+        - categoryId
+      properties:
+        companyId:
+          type: string
+        categoryId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        salary:
+          type: number
+        type:
+          type: string
+
+    ApplicationPayload:
+      type: object
+      required:
+        - jobId
+      properties:
+        jobId:
+          type: string
+
+    ApplicationStatusPayload:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+
+    # --- Pagination ---
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 87
+        totalPages:
+          type: integer
+          example: 9
+
+    PaginatedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: array
+          items:
+            type: object
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # --- Entity Responses ---
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Public UUID — internal integer ID is never exposed
+        fullname:
+          type: string
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CompanyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        location:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    JobResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        salary:
+          type: number
+          nullable: true
+        type:
+          type: string
+          example: Full-time
+        company:
+          $ref: '#/components/schemas/CompanyResponse'
+        category:
+          $ref: '#/components/schemas/CategoryResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ApplicationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        jobId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BookmarkResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        jobId:
+          type: string
+          format: uuid
+        job:
+          $ref: '#/components/schemas/JobResponse'
+        createdAt:
+          type: string
+          format: date-time
+
+    DocumentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+          description: S3 object key stored in database (e.g. documents/{userUuid}/{timestamp}-resume.pdf)
+        originalName:
+          type: string
+        mimeType:
+          type: string
+          example: application/pdf
+        size:
+          type: integer
+          description: File size in bytes
+        url:
+          type: string
+          description: Presigned S3 GetObject URL, valid for 3600 seconds
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+        maximum: 100
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailResponse'
+    ForbiddenError:
+      description: You do not have permission to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailResponse'
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailResponse'
+    TooManyRequestsError:
+      description: Rate limit exceeded — try again later
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailResponse'
+    InternalServerError:
+      description: Unexpected server-side error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+paths:
+  # ==========================================
+  # USERS & AUTHENTICATION
+  # ==========================================
+  /users:
+    post:
+      summary: Register a new user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation error or duplicate email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /users/{id}:
+    get:
+      summary: Get user public profile
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User profile retrieved
+          headers:
+            X-Data-Source:
+              description: Indicates if response is from cache
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /authentications:
+    post:
+      summary: Login user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPayload'
+      responses:
+        '201':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+                          refreshToken:
+                            type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+    put:
+      summary: Refresh access token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+    delete:
+      summary: Logout user
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: User logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+
+  # ==========================================
+  # PROFILE (LOGGED-IN USER)
+  # ==========================================
+  /profile:
+    get:
+      summary: Get logged-in user profile
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /profile/applications:
+    get:
+      summary: Get current user's job applications
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /profile/bookmarks:
+    get:
+      summary: Get current user's bookmarked jobs
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of bookmarks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ==========================================
+  # COMPANIES
+  # ==========================================
+  /companies:
+    get:
+      summary: List all companies
+      tags:
+        - Companies
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    post:
+      summary: Create a new company
+      tags:
+        - Companies
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyPayload'
+      responses:
+        '201':
+          description: Company created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+
+  /companies/{id}:
+    get:
+      summary: Get company details
+      tags:
+        - Companies
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Company details
+          headers:
+            X-Data-Source:
+              description: Indicates if response is from cache
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CompanyResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Update company
+      tags:
+        - Companies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyPayload'
+      responses:
+        '200':
+          description: Company updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+    delete:
+      summary: Delete company (Soft Delete)
+      tags:
+        - Companies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Company deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+
+  # ==========================================
+  # CATEGORIES
+  # ==========================================
+  /categories:
+    get:
+      summary: List all job categories
+      tags:
+        - Categories
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    post:
+      summary: Create a job category
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryPayload'
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /categories/{id}:
+    get:
+      summary: Get category details
+      tags:
+        - Categories
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Category details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    put:
+      summary: Update category
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryPayload'
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+    delete:
+      summary: Delete category
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+
+  # ==========================================
+  # JOBS
+  # ==========================================
+  /jobs:
+    get:
+      summary: List all jobs
+      tags:
+        - Jobs
+      parameters:
+        - name: title
+          in: query
+          schema:
+            type: string
+        - name: company-name
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    post:
+      summary: Create a job posting
+      tags:
+        - Jobs
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPayload'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /jobs/{id}:
+    get:
+      summary: Get job details
+      tags:
+        - Jobs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/JobResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Update a job posting
+      tags:
+        - Jobs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPayload'
+      responses:
+        '200':
+          description: Job updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+    delete:
+      summary: Delete a job posting (Soft Delete)
+      tags:
+        - Jobs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+
+  /jobs/company/{companyId}:
+    get:
+      summary: Get jobs by company
+      tags:
+        - Jobs
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /jobs/category/{categoryId}:
+    get:
+      summary: Get jobs by category
+      tags:
+        - Jobs
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ==========================================
+  # APPLICATIONS
+  # ==========================================
+  /applications:
+    get:
+      summary: List all applications
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    post:
+      summary: Apply for a job (Triggers RabbitMQ Worker)
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationPayload'
+      responses:
+        '201':
+          description: Application submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationResponse'
+        '400':
+          description: Already applied to this job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /applications/{id}:
+    get:
+      summary: Get application details
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Application details
+          headers:
+            X-Data-Source:
+              description: Indicates if response is from cache
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationResponse'
+    put:
+      summary: Update application status
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationStatusPayload'
+      responses:
+        '200':
+          description: Application status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+    delete:
+      summary: Delete application
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+
+  /applications/user/{userId}:
+    get:
+      summary: Get applications by user
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of user applications
+          headers:
+            X-Data-Source:
+              description: Indicates if response is from cache
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /applications/job/{jobId}:
+    get:
+      summary: Get applications by job
+      tags:
+        - Applications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of job applications
+          headers:
+            X-Data-Source:
+              description: Indicates if response is from cache
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ==========================================
+  # BOOKMARKS
+  # ==========================================
+  /jobs/{jobId}/bookmark:
+    post:
+      summary: Bookmark a job
+      tags:
+        - Bookmarks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Bookmark created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    delete:
+      summary: Remove bookmark for a job
+      tags:
+        - Bookmarks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bookmark deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+
+  /jobs/{jobId}/bookmark/{id}:
+    get:
+      summary: Get specific bookmark details
+      tags:
+        - Bookmarks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bookmark details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /bookmarks:
+    get:
+      summary: List all bookmarks for logged-in user
+      tags:
+        - Bookmarks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of bookmarks
+          headers:
+            X-Data-Source:
+              description: Indicates if response is from cache
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ==========================================
+  # DOCUMENTS
+  # ==========================================
+  /documents:
+    get:
+      summary: List all documents (Public metadata)
+      tags:
+        - Documents
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    post:
+      summary: Upload PDF document to S3
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                document:
+                  type: string
+                  format: binary
+                  description: Only application/pdf allowed, max 5MB
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          description: Invalid file type or size exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /documents/{id}:
+    get:
+      summary: Get document metadata / view PDF
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document metadata with presigned URL
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DocumentResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      summary: Delete document
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
