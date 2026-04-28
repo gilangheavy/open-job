@@ -1,0 +1,180 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+
+# Cancel previous runs for the same PR/branch when new commits land.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────
+  # JOB 1 — Security Audit
+  # ────────────────────────────────────────────────
+  security-check:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & install deps
+        uses: ./.github/actions/setup-node
+
+      - name: npm audit
+        run: npm audit --audit-level=high || true
+
+  # ────────────────────────────────────────────────
+  # JOB 2 — Static Analysis (lint + type check)
+  # ────────────────────────────────────────────────
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & install deps
+        uses: ./.github/actions/setup-node
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  # ────────────────────────────────────────────────
+  # JOB 3 — Unit Tests (fast, no service containers)
+  # ────────────────────────────────────────────────
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [security-check, static-analysis]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & install deps
+        uses: ./.github/actions/setup-node
+
+      - name: Build
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm run test -- --passWithNoTests --forceExit
+
+  # ────────────────────────────────────────────────
+  # JOB 4 — Integration Tests (with service containers)
+  # ────────────────────────────────────────────────
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [unit-test]
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: openjob_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      rabbitmq:
+        image: rabbitmq:4.3-management-alpine
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openjob_test
+      ACCESS_TOKEN_KEY: ci_access_token_secret
+      REFRESH_TOKEN_KEY: ci_refresh_token_secret
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: localhost
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET_NAME: openjob-test-bucket
+      MAIL_HOST: localhost
+      MAIL_PORT: 1025
+      MAIL_USER: test_user
+      MAIL_PASSWORD: test_password
+      PORT: 5000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & install deps
+        uses: ./.github/actions/setup-node
+
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:RELEASE.2025-07-23T15-54-02Z server /data --console-address ":9001"
+          echo "✅ MinIO container started"
+
+      - name: Wait for MinIO
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
+              echo "✅ MinIO is ready!"
+              exit 0
+            fi
+            echo "   Waiting... ($i/30)"; sleep 2
+          done
+          echo "❌ MinIO did not become ready in time"
+          exit 1
+
+      - name: Setup MinIO bucket
+        run: |
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          ./mc alias set minio http://127.0.0.1:9000 minioadmin minioadmin
+          ./mc mb minio/openjob-test-bucket --ignore-existing
+          echo "✅ Bucket 'openjob-test-bucket' created"
+
+      - name: Run e2e tests
+        run: npm run test:e2e -- --passWithNoTests --forceExit
