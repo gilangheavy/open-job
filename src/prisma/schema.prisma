@@ -1,0 +1,182 @@
+// OpenJob API - Prisma Schema
+// See: docs/database-design.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// USERS
+// =====================================================================
+
+model User {
+  id        Int       @id @default(autoincrement())
+  uuid      String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullname  String    @db.VarChar(100)
+  email     String    @unique @db.VarChar(150)
+  password  String    @db.Text
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
+
+  authentications Authentication[]
+  companies       Company[]
+  applications    Application[]
+  bookmarks       Bookmark[]
+  documents       Document[]
+
+  @@map("users")
+}
+
+// =====================================================================
+// AUTHENTICATIONS (Refresh Tokens)
+// =====================================================================
+
+model Authentication {
+  token     String   @id @db.Text
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("authentications")
+}
+
+// =====================================================================
+// COMPANIES
+// =====================================================================
+
+model Company {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @db.VarChar(150)
+  description String    @db.Text
+  location    String    @db.VarChar(150)
+  userId      Int       @map("user_id")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz()
+
+  owner User  @relation(fields: [userId], references: [id])
+  jobs  Job[]
+
+  @@index([userId])
+  @@map("companies")
+}
+
+// =====================================================================
+// CATEGORIES
+// =====================================================================
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  uuid      String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String    @unique @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
+
+  jobs Job[]
+
+  @@map("categories")
+}
+
+// =====================================================================
+// JOBS
+// =====================================================================
+
+model Job {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId   Int       @map("company_id")
+  categoryId  Int       @map("category_id")
+  title       String    @db.VarChar(200)
+  description String    @db.Text
+  location    String    @db.VarChar(150)
+  salary      Decimal?  @db.Decimal(15, 2)
+  type        String    @db.VarChar(50)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz()
+
+  company      Company       @relation(fields: [companyId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
+  applications Application[]
+  bookmarks    Bookmark[]
+
+  @@index([companyId])
+  @@index([categoryId])
+  @@map("jobs")
+}
+
+// =====================================================================
+// APPLICATIONS
+// =====================================================================
+
+model Application {
+  id        Int       @id @default(autoincrement())
+  uuid      String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    Int       @map("user_id")
+  jobId     Int       @map("job_id")
+  status    String    @default("pending") @db.VarChar(30)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id])
+  job  Job  @relation(fields: [jobId], references: [id])
+
+  @@unique([userId, jobId], name: "applications_user_id_job_id_key")
+  @@index([userId])
+  @@index([jobId])
+  @@map("applications")
+}
+
+// =====================================================================
+// BOOKMARKS
+// =====================================================================
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    Int      @map("user_id")
+  jobId     Int      @map("job_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId], name: "bookmarks_user_id_job_id_key")
+  @@index([userId])
+  @@index([jobId])
+  @@map("bookmarks")
+}
+
+// =====================================================================
+// DOCUMENTS
+// =====================================================================
+
+model Document {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       Int      @map("user_id")
+  filename     String   @db.VarChar(255)
+  originalName String   @map("original_name") @db.VarChar(255)
+  mimeType     String   @map("mime_type") @db.VarChar(100)
+  size         Int
+  url          String   @db.VarChar(500)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("documents")
+}
