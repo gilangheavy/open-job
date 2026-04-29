@@ -37,9 +37,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const responseStatus = status >= 500 ? 'error' : 'fail';
 
+    const normalizedMessage = Array.isArray(message)
+      ? message.join('; ')
+      : message;
+
     response.status(status).json({
       status: responseStatus,
-      message,
+      message: normalizedMessage,
     });
   }
 }
