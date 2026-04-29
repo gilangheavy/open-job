@@ -510,7 +510,7 @@ Structured JSON logging via NestJS built-in Logger (or `pino` for production per
   "timestamp": "2026-04-25T10:00:00.000Z",
   "context": "ApplicationService",
   "message": "Application created",
-  "correlationId": "req-uuid-v4",
+  "correlationId": "req-uuid-v7",
   "userId": "user-uuid"
 }
 ```
@@ -526,7 +526,7 @@ Structured JSON logging via NestJS built-in Logger (or `pino` for production per
 
 ### 14.3 Correlation ID
 
-Every HTTP request is assigned a unique `X-Correlation-ID` (UUID v4), injected by a global interceptor and propagated across all log entries for distributed tracing.
+Every HTTP request is assigned a unique `X-Correlation-ID` (UUID v7), injected by a global interceptor and propagated across all log entries for distributed tracing.
 
 ---
 

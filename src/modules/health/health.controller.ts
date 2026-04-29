@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { ConfigService } from '@nestjs/config';
+import { SkipThrottle } from '@nestjs/throttler';
 import { EnvConfig } from '../../config/env.config';
 import { PrismaHealthIndicator } from './indicators/prisma.health';
 import { TcpHealthIndicator } from './indicators/tcp.health';
@@ -8,6 +9,7 @@ import { SkipTransform } from '../../common/decorators/skip-transform.decorator'
 
 @Controller('health')
 @SkipTransform()
+@SkipThrottle()
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
