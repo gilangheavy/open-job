@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validate } from './config/env.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { CustomThrottlerGuard } from './common/guards/throttler.guard';
+import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
 
 @Module({
   imports: [
@@ -14,6 +17,12 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
       isGlobal: true,
       validate,
     }),
+    ThrottlerModule.forRoot([
+      {
+        limit: THROTTLER_LIMITS.global.limit,
+        ttl: THROTTLER_LIMITS.global.ttl,
+      },
+    ]),
     PrismaModule,
     HealthModule,
   ],
@@ -21,6 +30,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
   providers: [
     AppService,
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_GUARD, useClass: CustomThrottlerGuard },
   ],
 })
 export class AppModule {}
