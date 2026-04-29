@@ -35,7 +35,9 @@ describe('PrismaHealthIndicator', () => {
     prismaService = module.get(PrismaService);
 
     jest.clearAllMocks();
-    module.get(HealthIndicatorService).check.mockReturnValue(mockSession);
+    (module.get(HealthIndicatorService).check as jest.Mock).mockReturnValue(
+      mockSession,
+    );
   });
 
   it('should be defined', () => {

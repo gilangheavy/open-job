@@ -29,7 +29,9 @@ describe('TcpHealthIndicator', () => {
     indicator = module.get<TcpHealthIndicator>(TcpHealthIndicator);
 
     jest.clearAllMocks();
-    module.get(HealthIndicatorService).check.mockReturnValue(mockSession);
+    (module.get(HealthIndicatorService).check as jest.Mock).mockReturnValue(
+      mockSession,
+    );
   });
 
   it('should be defined', () => {
