@@ -108,7 +108,9 @@ describe('UsersService', () => {
       const result = await service.create(dto);
 
       expect(result).not.toHaveProperty('password');
-      expect((result as unknown as Record<string, unknown>)['id']).toBe(mockUser.uuid);
+      expect((result as unknown as Record<string, unknown>)['id']).toBe(
+        mockUser.uuid,
+      );
       expect(typeof result.id).toBe('string');
     });
   });
