@@ -176,5 +176,8 @@ jobs:
           ./mc mb minio/openjob-test-bucket --ignore-existing
           echo "✅ Bucket 'openjob-test-bucket' created"
 
+      - name: Run database migrations
+        run: npm run prisma:migrate:deploy
+
       - name: Run e2e tests
         run: npm run test:e2e -- --passWithNoTests --forceExit
