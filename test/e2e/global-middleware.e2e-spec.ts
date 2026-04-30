@@ -10,11 +10,11 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, Throttle } from '@nestjs/throttler';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { CorrelationIdInterceptor } from '../src/common/interceptors/correlation-id.interceptor';
-import { CustomThrottlerGuard } from '../src/common/guards/throttler.guard';
-import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
-import { THROTTLER_LIMITS } from '../src/common/constants/throttler.constants';
-import { UUID_V7_REGEX } from '../src/common/utils/uuid.util';
+import { CorrelationIdInterceptor } from '../../src/common/interceptors/correlation-id.interceptor';
+import { CustomThrottlerGuard } from '../../src/common/guards/throttler.guard';
+import { AllExceptionsFilter } from '../../src/common/filters/all-exceptions.filter';
+import { THROTTLER_LIMITS } from '../../src/common/constants/throttler.constants';
+import { UUID_V7_REGEX } from '../../src/common/utils/uuid.util';
 
 @Controller('test')
 class TestController {

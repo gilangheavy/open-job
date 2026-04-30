@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { validate } from './config/env.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
+import { CacheModule } from './modules/cache/cache.module';
+import { UsersModule } from './modules/users/users.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
@@ -24,7 +26,9 @@ import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
       },
     ]),
     PrismaModule,
+    CacheModule,
     HealthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
