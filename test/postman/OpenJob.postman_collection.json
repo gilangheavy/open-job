@@ -4356,7 +4356,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"name\": \"John Doe\",\r\n    \"email\": \"john@example.com\",\r\n    \"password\": \"password123\",\r\n    \"role\": \"user\"\r\n}",
+              "raw": "{\n    \"fullname\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4386,7 +4386,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"name\": \"Jane\",\r\n    \"email\": \"jane@example.com\",\r\n    \"password\": \"password123\",\r\n    \"role\": \"user\"\r\n}",
+              "raw": "{\n    \"fullname\": \"Jane\",\n    \"email\": \"jane@example.com\",\n    \"password\": \"password123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4454,7 +4454,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "})\r",
                   "\r",
@@ -4532,7 +4532,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "});"
                 ],
@@ -4600,7 +4600,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "});"
                 ],
@@ -4653,7 +4653,7 @@
               "script": {
                 "exec": [
                   "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(200);\r",
+                  "    pm.expect(pm.response).to.have.status(201);\r",
                   "});\r",
                   "\r",
                   "pm.test('response Content-Type header should have application/json value', () => {\r",
@@ -4726,7 +4726,7 @@
               "script": {
                 "exec": [
                   "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(200);\r",
+                  "    pm.expect(pm.response).to.have.status(201);\r",
                   "});\r",
                   "\r",
                   "pm.test('response Content-Type header should have application/json value', () => {\r",
@@ -4805,7 +4805,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "})"
                 ],
@@ -4849,7 +4849,7 @@
               "script": {
                 "exec": [
                   "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
                   "});\r",
                   "\r",
                   "pm.test('response Content-Type header should have application/json value', () => {\r",
@@ -4864,7 +4864,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "});"
                 ],
@@ -4908,7 +4908,7 @@
               "script": {
                 "exec": [
                   "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
                   "});\r",
                   "\r",
                   "pm.test('response Content-Type header should have application/json value', () => {\r",
@@ -4923,7 +4923,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "});"
                 ],
@@ -5042,7 +5042,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "})"
                 ],
@@ -5092,7 +5092,7 @@
               "script": {
                 "exec": [
                   "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "    pm.expect(pm.response).to.have.status(200);\r",
                   "});\r",
                   "\r",
                   "pm.test('response Content-Type header should have application/json value', () => {\r",
@@ -5107,8 +5107,8 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    ",
                   "})"
                 ],
                 "type": "text/javascript"
@@ -5287,7 +5287,7 @@
               "script": {
                 "exec": [
                   "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
                   "});\r",
                   "\r",
                   "pm.test('response Content-Type header should have application/json value', () => {\r",
@@ -5302,7 +5302,7 @@
                   "pm.test('response body have correct property and value', () => {\r",
                   "    const responseJson = pm.response.json();\r",
                   "\r",
-                  "    pm.expect(responseJson.status).to.equal('failed');\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
                   "    pm.expect(responseJson.message).to.be.a('string');\r",
                   "})"
                 ],

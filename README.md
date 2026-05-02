@@ -80,7 +80,20 @@ Copy the example environment file and configure your credentials:
 cp .env.example .env
 ```
 
-_(Ensure you fill in the Database URL, JWT Secrets, Redis, RabbitMQ, and S3 credentials)._
+Generate secure JWT secret keys using the built-in script:
+
+```bash
+npm run generate:keys
+```
+
+Copy the output values into your `.env` file:
+
+```env
+ACCESS_TOKEN_KEY=<generated_value>
+REFRESH_TOKEN_KEY=<generated_value>
+```
+
+_(Ensure you also fill in the Database URL, Redis, RabbitMQ, and S3 credentials)._
 
 ### 3. Spin Up Infrastructure
 
