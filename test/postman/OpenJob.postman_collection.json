@@ -1074,6 +1074,82 @@
       "name": "Categories",
       "item": [
         {
+          "name": "[Setup] Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.environment.set('categoryTestEmail', `cattest_${ts}@example.com`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('user registered successfully', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullname\": \"Category Tester\",\n    \"email\": \"{{categoryTestEmail}}\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/users"
+          },
+          "response": []
+        },
+        {
+          "name": "[Setup] Login for Auth Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('login successful', () => {",
+                  "    pm.expect(pm.response).to.have.status(201);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.environment.set('accessToken', responseJson.data.accessToken);",
+                  "pm.environment.set('refreshToken', responseJson.data.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{categoryTestEmail}}\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
           "name": "Add Category without Authentication",
           "event": [
             {
@@ -1095,7 +1171,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -1141,7 +1217,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -1187,7 +1263,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -1212,16 +1288,13 @@
                   "let badCategoryPayloads = pm.environment.get('badCategoryPayloads');",
                   "",
                   "if (!badCategoryPayloads || badCategoryPayloads.length === 0) {",
-                  "    badCategoryPayloads = [",
-                  "        {},",
-                  "        { name: 123 },",
-                  "        { name: '' }",
-                  "    ]",
+                  "    badCategoryPayloads = JSON.stringify([{}, { name: 123 }, { name: '' }]);",
                   "}",
                   "",
-                  "const currentBadCategoryPayload = badCategoryPayloads.shift();",
-                  "pm.environment.set('currentBadCategoryPayload', JSON.stringify(currentBadCategoryPayload));",
-                  "pm.environment.set('badCategoryPayloads', badCategoryPayloads);"
+                  "const payloads = JSON.parse(badCategoryPayloads);",
+                  "const current = payloads.shift();",
+                  "pm.environment.set('currentBadCategoryPayload', JSON.stringify(current));",
+                  "pm.environment.set('badCategoryPayloads', JSON.stringify(payloads));"
                 ],
                 "type": "text/javascript"
               }
@@ -1234,16 +1307,23 @@
                   "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});",
                   "",
                   "const repeatRequestUntilDatasetEmpty = () => {",
-                  "    const badCategoryPayloads = pm.environment.get('badCategoryPayloads');",
-                  "    if(badCategoryPayloads && badCategoryPayloads.length > 0) {",
-                  "        postman.setNextRequest('Add Category with Invalid Payload');",
+                  "    const remaining = pm.environment.get('badCategoryPayloads');",
+                  "    if (remaining) {",
+                  "        const arr = JSON.parse(remaining);",
+                  "        if (arr.length > 0) {",
+                  "            pm.execution.setNextRequest('Add Category with Invalid Payload');",
+                  "        }",
                   "    }",
                   "};",
                   "",
@@ -1286,9 +1366,13 @@
                   "    pm.expect(pm.response).to.have.status(404);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -1312,6 +1396,16 @@
                 "exec": [
                   "pm.test('it should response 404 status code', () => {",
                   "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1349,6 +1443,16 @@
                 "exec": [
                   "pm.test('it should response 404 status code', () => {",
                   "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1372,6 +1476,16 @@
           "name": "Add Category with Valid Payload",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.environment.set('testCategoryName', 'Test Category ' + ts);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -1379,10 +1493,16 @@
                   "    pm.expect(pm.response).to.have.status(201);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
                   "    pm.expect(responseJson.status).to.equal('success');",
                   "    pm.expect(responseJson.data.id).to.be.a('string');",
+                  "    pm.expect(responseJson.data.name).to.equal(pm.environment.get('testCategoryName'));",
+                  "    pm.expect(responseJson.data).to.not.have.property('deletedAt');",
                   "    pm.environment.set('categoryId', responseJson.data.id);",
                   "});"
                 ],
@@ -1401,7 +1521,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Software Engineering\"\n}",
+              "raw": "{\n    \"name\": \"{{testCategoryName}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1423,10 +1543,19 @@
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
                   "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.categories).to.be.an('array');",
+                  "    pm.expect(responseJson.data.items).to.be.an('array');",
+                  "    pm.expect(responseJson.data.meta).to.be.an('object');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('total');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('page');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('limit');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('totalPages');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1451,10 +1580,16 @@
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
                   "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.name).to.equal('Software Engineering');",
+                  "    pm.expect(responseJson.data.id).to.equal(pm.environment.get('categoryId'));",
+                  "    pm.expect(responseJson.data.name).to.equal(pm.environment.get('testCategoryName'));",
+                  "    pm.expect(responseJson.data).to.not.have.property('deletedAt');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1477,6 +1612,16 @@
                 "exec": [
                   "pm.test('it should response 200 status code', () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('success');",
+                  "    pm.expect(responseJson.message).to.equal('Category updated successfully');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1514,6 +1659,16 @@
                 "exec": [
                   "pm.test('it should response 200 status code', () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('success');",
+                  "    pm.expect(responseJson.message).to.equal('Category deleted successfully');",
                   "});"
                 ],
                 "type": "text/javascript"
