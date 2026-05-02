@@ -31,7 +31,8 @@ async function loginUser(
     .post('/api/v1/authentications')
     .send({ email, password })
     .expect(201);
-  return res.body.accessToken as string;
+  // TransformInterceptor wraps response: { status, data: { accessToken, refreshToken } }
+  return res.body.data.accessToken as string;
 }
 
 describe('CompaniesController (e2e)', () => {
@@ -90,7 +91,10 @@ describe('CompaniesController (e2e)', () => {
   describe('GET /api/v1/companies', () => {
     it('should return paginated list of companies (public)', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       await request(app.getHttpServer())
@@ -114,7 +118,10 @@ describe('CompaniesController (e2e)', () => {
 
     it('should not include soft-deleted companies in the list', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -147,7 +154,10 @@ describe('CompaniesController (e2e)', () => {
   describe('POST /api/v1/companies', () => {
     it('should create a company for authenticated user', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
       const payload = makeCompanyPayload();
 
@@ -177,7 +187,10 @@ describe('CompaniesController (e2e)', () => {
 
     it('should return 400 when required fields are missing', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const res = await request(app.getHttpServer())
@@ -196,7 +209,10 @@ describe('CompaniesController (e2e)', () => {
   describe('GET /api/v1/companies/:uuid', () => {
     it('should return company details and cache the second hit', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -234,7 +250,10 @@ describe('CompaniesController (e2e)', () => {
 
     it('should return 404 for soft-deleted company', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -263,7 +282,10 @@ describe('CompaniesController (e2e)', () => {
   describe('PUT /api/v1/companies/:uuid', () => {
     it('should update company when requested by the owner', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -287,8 +309,14 @@ describe('CompaniesController (e2e)', () => {
     it('should return 403 when a non-owner tries to update', async () => {
       const owner = makeUser();
       const other = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(owner).expect(201);
-      await request(app.getHttpServer()).post('/api/v1/users').send(other).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(owner)
+        .expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(other)
+        .expect(201);
       const ownerToken = await loginUser(app, owner.email, owner.password);
       const otherToken = await loginUser(app, other.email, other.password);
 
@@ -311,7 +339,10 @@ describe('CompaniesController (e2e)', () => {
 
     it('should return 401 when no token is provided', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -330,7 +361,10 @@ describe('CompaniesController (e2e)', () => {
 
     it('should invalidate cache after update', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -368,7 +402,10 @@ describe('CompaniesController (e2e)', () => {
   describe('DELETE /api/v1/companies/:uuid', () => {
     it('should soft delete company when requested by owner', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())
@@ -396,8 +433,14 @@ describe('CompaniesController (e2e)', () => {
     it('should return 403 when a non-owner tries to delete', async () => {
       const owner = makeUser();
       const other = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(owner).expect(201);
-      await request(app.getHttpServer()).post('/api/v1/users').send(other).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(owner)
+        .expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(other)
+        .expect(201);
       const ownerToken = await loginUser(app, owner.email, owner.password);
       const otherToken = await loginUser(app, other.email, other.password);
 
@@ -419,7 +462,10 @@ describe('CompaniesController (e2e)', () => {
 
     it('should return 401 when no token is provided', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const createRes = await request(app.getHttpServer())

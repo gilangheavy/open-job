@@ -21,9 +21,9 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { SkipTransform } from '../../common/decorators/skip-transform.decorator';
-import type {
-  PaginatedResult,
+import {
   PaginationQueryDto,
+  type PaginatedResult,
 } from '../profile/dto/pagination-query.dto';
 
 @Controller('companies')
