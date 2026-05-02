@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CacheService } from '../cache/cache.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -39,15 +40,26 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
-    const user = await this.prisma.client.user.create({
-      data: {
-        fullname: dto.fullname,
-        email: dto.email,
-        password: hashedPassword,
-      },
-    });
+    try {
+      const user = await this.prisma.client.user.create({
+        data: {
+          fullname: dto.fullname,
+          email: dto.email,
+          password: hashedPassword,
+        },
+      });
 
-    return this.toResponse(user);
+      return this.toResponse(user);
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        // Email exists but was soft-deleted — treat as conflict
+        throw new ConflictException('Email already registered');
+      }
+      throw e;
+    }
   }
 
   async findByUuid(uuid: string): Promise<FindByUuidResult> {

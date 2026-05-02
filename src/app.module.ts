@@ -24,12 +24,17 @@ import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
       isGlobal: true,
       validate,
     }),
-    ThrottlerModule.forRoot([
-      {
-        limit: THROTTLER_LIMITS.global.limit,
-        ttl: THROTTLER_LIMITS.global.ttl,
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      // Skip throttling outside production so Newman / integration test suites
+      // are not rate-limited by the strict per-endpoint caps.
+      skipIf: () => process.env.NODE_ENV !== 'production',
+      throttlers: [
+        {
+          limit: THROTTLER_LIMITS.global.limit,
+          ttl: THROTTLER_LIMITS.global.ttl,
+        },
+      ],
+    }),
     PrismaModule,
     CacheModule,
     HealthModule,

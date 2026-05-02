@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Category } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CacheService } from '../cache/cache.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -40,10 +41,20 @@ export class CategoriesService {
       throw new ConflictException('Category with this name already exists');
     }
 
-    const category = await this.prisma.client.category.create({
-      data: { name: dto.name },
-    });
-    return this.toResponse(category);
+    try {
+      const category = await this.prisma.client.category.create({
+        data: { name: dto.name },
+      });
+      return this.toResponse(category);
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException('Category with this name already exists');
+      }
+      throw e;
+    }
   }
 
   async findAll(
@@ -105,10 +116,20 @@ export class CategoriesService {
       }
     }
 
-    await this.prisma.client.category.update({
-      where: { id: category.id },
-      data: { name: dto.name },
-    });
+    try {
+      await this.prisma.client.category.update({
+        where: { id: category.id },
+        data: { name: dto.name },
+      });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException('Category with this name already exists');
+      }
+      throw e;
+    }
 
     await this.invalidateCache(uuid);
   }

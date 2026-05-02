@@ -1,9 +1,11 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import type { Company, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CacheService } from '../cache/cache.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -38,16 +40,26 @@ export class CompaniesService {
     userUuid: string,
     dto: CreateCompanyDto,
   ): Promise<CompanyResponseDto> {
-    const company = await this.prisma.client.company.create({
-      data: {
-        name: dto.name,
-        description: dto.description ?? '',
-        location: dto.location,
-        owner: { connect: { uuid: userUuid } },
-      },
-      include: { owner: true },
-    });
-    return this.toResponse(company);
+    try {
+      const company = await this.prisma.client.company.create({
+        data: {
+          name: dto.name,
+          description: dto.description ?? '',
+          location: dto.location,
+          owner: { connect: { uuid: userUuid } },
+        },
+        include: { owner: true },
+      });
+      return this.toResponse(company);
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException('Company with this name already exists');
+      }
+      throw e;
+    }
   }
 
   async findAll(
@@ -107,14 +119,24 @@ export class CompaniesService {
     const company = await this.findCompanyOrFail(uuid);
     this.assertOwnership(company, userUuid);
 
-    await this.prisma.client.company.update({
-      where: { id: company.id },
-      data: {
-        ...(dto.name !== undefined && { name: dto.name }),
-        ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.location !== undefined && { location: dto.location }),
-      },
-    });
+    try {
+      await this.prisma.client.company.update({
+        where: { id: company.id },
+        data: {
+          ...(dto.name !== undefined && { name: dto.name }),
+          ...(dto.description !== undefined && { description: dto.description }),
+          ...(dto.location !== undefined && { location: dto.location }),
+        },
+      });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException('Company with this name already exists');
+      }
+      throw e;
+    }
 
     await this.invalidateCache(uuid);
   }
