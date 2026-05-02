@@ -56,7 +56,10 @@ async function setupOwnerWithCompanyAndCategory(
   app: INestApplication<App>,
 ): Promise<{ token: string; companyId: string; categoryId: string }> {
   const user = makeUser();
-  await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+  await request(app.getHttpServer())
+    .post('/api/v1/users')
+    .send(user)
+    .expect(201);
   const token = await loginUser(app, user.email, user.password);
 
   const companyRes = await request(app.getHttpServer())
@@ -178,17 +181,18 @@ describe('JobsController (e2e)', () => {
         .expect(200);
 
       expect(res.body.data.items.length).toBeGreaterThanOrEqual(1);
-      const titles: string[] = res.body.data.items.map(
-        (j: { title: string }) => j.title.toLowerCase(),
+      const titles: string[] = res.body.data.items.map((j: { title: string }) =>
+        j.title.toLowerCase(),
       );
-      titles.forEach((t) =>
-        expect(t).toContain(uniqueTitle.toLowerCase()),
-      );
+      titles.forEach((t) => expect(t).toContain(uniqueTitle.toLowerCase()));
     });
 
     it('should return jobs matching ?company-name search (case-insensitive)', async () => {
       const user = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(user)
+        .expect(201);
       const token = await loginUser(app, user.email, user.password);
 
       const uniqueCompanyName = `AcmeCorp_${getRandomString()}`;
@@ -355,10 +359,7 @@ describe('JobsController (e2e)', () => {
         .post('/api/v1/jobs')
         .set('Authorization', `Bearer ${token}`)
         .send(
-          makeJobPayload(
-            '00000000-0000-0000-0000-000000000000',
-            categoryId,
-          ),
+          makeJobPayload('00000000-0000-0000-0000-000000000000', categoryId),
         )
         .expect(404);
 
@@ -544,13 +545,19 @@ describe('JobsController (e2e)', () => {
     });
 
     it('should return 403 when a non-owner tries to update', async () => {
-      const { companyId, categoryId } =
-        await setupOwnerWithCompanyAndCategory(app);
+      const { categoryId } = await setupOwnerWithCompanyAndCategory(app);
 
       // Create job as owner
       const ownerData = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(ownerData).expect(201);
-      const ownerToken = await loginUser(app, ownerData.email, ownerData.password);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(ownerData)
+        .expect(201);
+      const ownerToken = await loginUser(
+        app,
+        ownerData.email,
+        ownerData.password,
+      );
 
       // Get a fresh company owned by ownerData
       const ownerCompanyRes = await request(app.getHttpServer())
@@ -571,7 +578,10 @@ describe('JobsController (e2e)', () => {
 
       // A different user (who owns a different company) tries to update
       const other = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(other).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(other)
+        .expect(201);
       const otherToken = await loginUser(app, other.email, other.password);
 
       const res = await request(app.getHttpServer())
@@ -687,7 +697,10 @@ describe('JobsController (e2e)', () => {
       const uuid: string = createRes.body.data.id;
 
       const other = makeUser();
-      await request(app.getHttpServer()).post('/api/v1/users').send(other).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/users')
+        .send(other)
+        .expect(201);
       const otherToken = await loginUser(app, other.email, other.password);
 
       const res = await request(app.getHttpServer())

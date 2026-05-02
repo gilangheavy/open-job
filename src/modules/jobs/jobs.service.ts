@@ -81,12 +81,10 @@ export class JobsService {
       },
     });
 
-    return this.toResponse(job as JobWithRelations);
+    return this.toResponse(job);
   }
 
-  async findAll(
-    query: JobQueryDto,
-  ): Promise<PaginatedResult<JobResponseDto>> {
+  async findAll(query: JobQueryDto): Promise<PaginatedResult<JobResponseDto>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
@@ -145,7 +143,7 @@ export class JobsService {
       throw new NotFoundException('Job not found');
     }
 
-    const response = this.toResponse(job as JobWithRelations);
+    const response = this.toResponse(job);
     await this.cache.set(cacheKey(uuid), response, CACHE_TTL);
     return { data: response, source: 'database' };
   }
@@ -295,7 +293,7 @@ export class JobsService {
       throw new NotFoundException('Job not found');
     }
 
-    return job as JobWithRelations;
+    return job;
   }
 
   private assertOwnership(job: JobWithRelations, userUuid: string): void {

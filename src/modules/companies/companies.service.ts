@@ -124,7 +124,9 @@ export class CompaniesService {
         where: { id: company.id },
         data: {
           ...(dto.name !== undefined && { name: dto.name }),
-          ...(dto.description !== undefined && { description: dto.description }),
+          ...(dto.description !== undefined && {
+            description: dto.description,
+          }),
           ...(dto.location !== undefined && { location: dto.location }),
         },
       });

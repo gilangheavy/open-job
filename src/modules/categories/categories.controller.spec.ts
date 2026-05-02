@@ -88,7 +88,10 @@ describe('CategoriesController', () => {
     });
 
     it('should set X-Data-Source to "cache" when served from cache', async () => {
-      service.findByUuid.mockResolvedValue({ ...mockFindResult, source: 'cache' });
+      service.findByUuid.mockResolvedValue({
+        ...mockFindResult,
+        source: 'cache',
+      });
 
       await controller.getById(CATEGORY_UUID, mockRes);
 
@@ -98,9 +101,9 @@ describe('CategoriesController', () => {
     it('should propagate NotFoundException from service', async () => {
       service.findByUuid.mockRejectedValue(new NotFoundException());
 
-      await expect(
-        controller.getById(CATEGORY_UUID, mockRes),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.getById(CATEGORY_UUID, mockRes)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

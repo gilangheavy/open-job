@@ -1,8 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-} from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import type { NextFunction, Request, Response } from 'express';
 import { JobsController } from './jobs.controller';
@@ -48,8 +44,6 @@ function companyNameQueryMiddleware(
 })
 export class JobsModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer
-      .apply(companyNameQueryMiddleware)
-      .forRoutes(JobsController);
+    consumer.apply(companyNameQueryMiddleware).forRoutes(JobsController);
   }
 }
