@@ -609,7 +609,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -655,7 +655,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -701,7 +701,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -750,7 +750,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});",
                   "",
@@ -848,8 +848,10 @@
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
                   "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.companies).to.be.an('array');",
-                  "    pm.expect(responseJson.data.companies.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.data.items).to.be.an('array');",
+                  "    pm.expect(responseJson.data.items.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.data.meta).to.be.an('object');",
+                  "    pm.expect(responseJson.data.meta.total).to.be.a('number');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -876,7 +878,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -907,6 +909,11 @@
                   "    pm.expect(responseJson.status).to.equal('success');",
                   "    pm.expect(responseJson.data.id).to.equal(companyId);",
                   "    pm.expect(responseJson.data.name).to.equal('Tech Corp Indonesia');",
+                  "    pm.expect(responseJson.data.userId).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test('response should have X-Data-Source header', () => {",
+                  "    pm.expect(pm.response.headers.get('X-Data-Source')).to.be.oneOf(['database', 'cache']);",
                   "});"
                 ],
                 "type": "text/javascript"
