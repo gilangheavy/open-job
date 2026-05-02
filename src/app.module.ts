@@ -12,6 +12,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthenticationsModule } from './modules/authentications/authentications.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { CompaniesModule } from './modules/companies/companies.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
@@ -35,6 +36,7 @@ import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
     AuthenticationsModule,
     ProfileModule,
     CompaniesModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [
