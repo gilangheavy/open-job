@@ -13,6 +13,7 @@ import { AuthenticationsModule } from './modules/authentications/authentications
 import { ProfileModule } from './modules/profile/profile.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { JobsModule } from './modules/jobs/jobs.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
@@ -37,6 +38,7 @@ import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
     ProfileModule,
     CompaniesModule,
     CategoriesModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [
