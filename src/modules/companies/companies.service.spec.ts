@@ -120,7 +120,10 @@ describe('CompaniesService', () => {
     });
 
     it('should store empty string when description is not provided', async () => {
-      const dtoWithoutDesc: CreateCompanyDto = { name: 'Test', location: 'Bali' };
+      const dtoWithoutDesc: CreateCompanyDto = {
+        name: 'Test',
+        location: 'Bali',
+      };
       prisma.client.company.create.mockResolvedValue({
         ...mockCompany,
         description: '',
@@ -153,7 +156,10 @@ describe('CompaniesService', () => {
         description: '',
       });
 
-      const result = await service.create(OWNER_UUID, { name: 'X', location: 'Y' });
+      const result = await service.create(OWNER_UUID, {
+        name: 'X',
+        location: 'Y',
+      });
 
       expect(result.description).toBeNull();
     });
@@ -300,7 +306,10 @@ describe('CompaniesService', () => {
 
       expect(prisma.client.company.update).toHaveBeenCalledWith({
         where: { id: mockCompany.id },
-        data: expect.objectContaining({ name: 'Updated Name', location: 'Bandung' }),
+        data: expect.objectContaining({
+          name: 'Updated Name',
+          location: 'Bandung',
+        }),
       });
       expect(cache.del).toHaveBeenCalledWith(`companies:${COMPANY_UUID}`);
     });
@@ -308,18 +317,18 @@ describe('CompaniesService', () => {
     it('should throw NotFoundException when company not found', async () => {
       prisma.client.company.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(COMPANY_UUID, OWNER_UUID, dto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.update(COMPANY_UUID, OWNER_UUID, dto),
+      ).rejects.toThrow(NotFoundException);
       expect(prisma.client.company.update).not.toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
       prisma.client.company.findUnique.mockResolvedValue(mockCompany);
 
-      await expect(service.update(COMPANY_UUID, OTHER_UUID, dto)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.update(COMPANY_UUID, OTHER_UUID, dto),
+      ).rejects.toThrow(ForbiddenException);
       expect(prisma.client.company.update).not.toHaveBeenCalled();
     });
 

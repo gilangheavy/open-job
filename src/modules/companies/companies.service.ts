@@ -47,7 +47,7 @@ export class CompaniesService {
       },
       include: { owner: true },
     });
-    return this.toResponse(company as CompanyWithOwner);
+    return this.toResponse(company);
   }
 
   async findAll(
@@ -94,7 +94,7 @@ export class CompaniesService {
       throw new NotFoundException('Company not found');
     }
 
-    const response = this.toResponse(company as CompanyWithOwner);
+    const response = this.toResponse(company);
     await this.cache.set(cacheKey(uuid), response, CACHE_TTL);
     return { data: response, source: 'database' };
   }
@@ -149,13 +149,10 @@ export class CompaniesService {
       throw new NotFoundException('Company not found');
     }
 
-    return company as CompanyWithOwner;
+    return company;
   }
 
-  private assertOwnership(
-    company: CompanyWithOwner,
-    userUuid: string,
-  ): void {
+  private assertOwnership(company: CompanyWithOwner, userUuid: string): void {
     if (company.owner.uuid !== userUuid) {
       throw new ForbiddenException(
         'You do not have permission to modify this company',

@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { Response } from 'express';
 import { CompaniesController } from './companies.controller';
 import { CompaniesService } from './companies.service';
@@ -172,14 +169,19 @@ describe('CompaniesController', () => {
 
       const result = await controller.update(COMPANY_UUID, mockUser, dto);
 
-      expect(service.update).toHaveBeenCalledWith(COMPANY_UUID, OWNER_UUID, dto);
-      expect(result).toEqual({ status: 'success', message: 'Company updated successfully' });
+      expect(service.update).toHaveBeenCalledWith(
+        COMPANY_UUID,
+        OWNER_UUID,
+        dto,
+      );
+      expect(result).toEqual({
+        status: 'success',
+        message: 'Company updated successfully',
+      });
     });
 
     it('should propagate ForbiddenException from service', async () => {
-      service.update.mockRejectedValue(
-        new ForbiddenException('Not the owner'),
-      );
+      service.update.mockRejectedValue(new ForbiddenException('Not the owner'));
 
       await expect(
         controller.update(COMPANY_UUID, mockUser, dto),
@@ -207,13 +209,14 @@ describe('CompaniesController', () => {
       const result = await controller.remove(COMPANY_UUID, mockUser);
 
       expect(service.remove).toHaveBeenCalledWith(COMPANY_UUID, OWNER_UUID);
-      expect(result).toEqual({ status: 'success', message: 'Company deleted successfully' });
+      expect(result).toEqual({
+        status: 'success',
+        message: 'Company deleted successfully',
+      });
     });
 
     it('should propagate ForbiddenException from service', async () => {
-      service.remove.mockRejectedValue(
-        new ForbiddenException('Not the owner'),
-      );
+      service.remove.mockRejectedValue(new ForbiddenException('Not the owner'));
 
       await expect(controller.remove(COMPANY_UUID, mockUser)).rejects.toThrow(
         ForbiddenException,
