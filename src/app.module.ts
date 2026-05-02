@@ -10,6 +10,7 @@ import { HealthModule } from './modules/health/health.module';
 import { CacheModule } from './modules/cache/cache.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthenticationsModule } from './modules/authentications/authentications.module';
+import { ProfileModule } from './modules/profile/profile.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
@@ -31,6 +32,7 @@ import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
     HealthModule,
     UsersModule,
     AuthenticationsModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [
