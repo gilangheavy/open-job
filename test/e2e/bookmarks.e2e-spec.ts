@@ -235,7 +235,7 @@ describe('BookmarksController (e2e)', () => {
         .set('Authorization', `Bearer ${applicantToken}`)
         .expect(201);
 
-      expect(res.body.data).not.toHaveProperty('userId');
+      expect(res.body.data).not.toHaveProperty('deletedAt');
       // id must be a UUID string, not integer
       expect(typeof res.body.data.id).toBe('string');
       expect(res.body.data.id).toMatch(
