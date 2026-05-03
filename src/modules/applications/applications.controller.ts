@@ -50,22 +50,36 @@ export class ApplicationsController {
 
   @Get('user/:userId')
   @UseGuards(JwtAuthGuard)
-  getByUser(
+  async getByUser(
     @Param('userId') userId: string,
     @CurrentUser() user: JwtPayload,
     @Query() query: PaginationQueryDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<PaginatedResult<ApplicationResponseDto>> {
-    return this.applicationsService.findByUser(userId, user.id, query);
+    const { data, source } = await this.applicationsService.findByUser(
+      userId,
+      user.id,
+      query,
+    );
+    res.header('X-Data-Source', source);
+    return data;
   }
 
   @Get('job/:jobId')
   @UseGuards(JwtAuthGuard)
-  getByJob(
+  async getByJob(
     @Param('jobId') jobId: string,
     @CurrentUser() user: JwtPayload,
     @Query() query: PaginationQueryDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<PaginatedResult<ApplicationResponseDto>> {
-    return this.applicationsService.findByJob(jobId, user.id, query);
+    const { data, source } = await this.applicationsService.findByJob(
+      jobId,
+      user.id,
+      query,
+    );
+    res.header('X-Data-Source', source);
+    return data;
   }
 
   @Get(':uuid')

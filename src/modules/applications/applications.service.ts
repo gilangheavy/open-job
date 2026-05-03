@@ -38,6 +38,11 @@ export type FindByUuidResult = {
   source: 'cache' | 'database';
 };
 
+export type FindListResult<T> = {
+  data: T;
+  source: 'cache' | 'database';
+};
+
 /**
  * Valid status transitions for the application state machine.
  * pending → accepted ✓
@@ -192,7 +197,7 @@ export class ApplicationsService {
     targetUserUuid: string,
     requesterUuid: string,
     query: PaginationQueryDto,
-  ): Promise<PaginatedResult<ApplicationResponseDto>> {
+  ): Promise<FindListResult<PaginatedResult<ApplicationResponseDto>>> {
     if (!UUID_REGEX.test(targetUserUuid)) {
       throw new NotFoundException('User not found');
     }
@@ -204,7 +209,7 @@ export class ApplicationsService {
     const cached = await this.cache.get<
       PaginatedResult<ApplicationResponseDto>
     >(userCacheKey(targetUserUuid));
-    if (cached) return cached;
+    if (cached) return { data: cached, source: 'cache' };
 
     const user = await this.prisma.client.user.findUnique({
       where: { uuid: targetUserUuid },
@@ -245,14 +250,14 @@ export class ApplicationsService {
     };
 
     await this.cache.set(userCacheKey(targetUserUuid), result, CACHE_TTL);
-    return result;
+    return { data: result, source: 'database' };
   }
 
   async findByJob(
     jobUuid: string,
     requesterUuid: string,
     query: PaginationQueryDto,
-  ): Promise<PaginatedResult<ApplicationResponseDto>> {
+  ): Promise<FindListResult<PaginatedResult<ApplicationResponseDto>>> {
     if (!UUID_REGEX.test(jobUuid)) {
       throw new NotFoundException('Job not found');
     }
@@ -260,7 +265,7 @@ export class ApplicationsService {
     const cached = await this.cache.get<
       PaginatedResult<ApplicationResponseDto>
     >(jobCacheKey(jobUuid));
-    if (cached) return cached;
+    if (cached) return { data: cached, source: 'cache' };
 
     const job = await this.prisma.client.job.findUnique({
       where: { uuid: jobUuid },
@@ -309,7 +314,7 @@ export class ApplicationsService {
     };
 
     await this.cache.set(jobCacheKey(jobUuid), result, CACHE_TTL);
-    return result;
+    return { data: result, source: 'database' };
   }
 
   async updateStatus(
