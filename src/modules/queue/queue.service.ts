@@ -10,6 +10,8 @@ import type { EnvConfig } from '../../config/env.config';
 
 const EXCHANGE_NAME = 'openjob.events';
 const EXCHANGE_TYPE = 'direct';
+const QUEUE_NAME = 'application.created';
+const DLQ_NAME = 'application.created.dlq';
 
 @Injectable()
 export class QueueService implements OnModuleInit, OnModuleDestroy {
@@ -34,6 +36,21 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       await this.channel.assertExchange(EXCHANGE_NAME, EXCHANGE_TYPE, {
         durable: true,
       });
+
+      // Assert DLQ first — no dead-letter, simply durable
+      await this.channel.assertQueue(DLQ_NAME, { durable: true });
+
+      // Assert main queue with dead-letter routing to DLQ
+      await this.channel.assertQueue(QUEUE_NAME, {
+        durable: true,
+        arguments: {
+          'x-dead-letter-exchange': '',
+          'x-dead-letter-routing-key': DLQ_NAME,
+        },
+      });
+
+      // Bind main queue to the exchange using the routing key
+      await this.channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, QUEUE_NAME);
 
       this.logger.log('RabbitMQ connection established');
     } catch (err) {
