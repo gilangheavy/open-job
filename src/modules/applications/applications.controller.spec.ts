@@ -251,7 +251,7 @@ describe('ApplicationsController', () => {
         controller.getByJob(JOB_UUID, mockApplicantUser, {
           page: 1,
           limit: 10,
-        }),
+        }, mockRes),
       ).rejects.toThrow(ForbiddenException);
     });
   });
