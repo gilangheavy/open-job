@@ -1,0 +1,39 @@
+# --- source / build artifacts ---
+
+node_modules
+dist
+
+# --- test & dev files ---
+
+test
+**/\*.spec.ts
+**/\*.e2e-spec.ts
+coverage
+.nyc_output
+
+# --- local environment ---
+
+.env
+.env.\*
+!.env.example
+
+# --- infrastructure files (not needed inside the app image) ---
+
+infrastructure
+scripts
+temp
+docs
+
+# --- git / IDE ---
+
+.git
+.gitignore
+.github
+.vscode
+\*.md
+
+# --- misc ---
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log\*
