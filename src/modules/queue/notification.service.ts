@@ -35,22 +35,22 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const mailPort = this.config.get('MAIL_PORT');
+    const mailPort: number = this.config.get('MAIL_PORT');
+    const mailHost: string = this.config.get('MAIL_HOST');
+    const mailUser: string = this.config.get('MAIL_USER');
+    const mailPass: string = this.config.get('MAIL_PASSWORD');
     this.transporter = nodemailer.createTransport({
-      host: this.config.get('MAIL_HOST'),
+      host: mailHost,
       port: mailPort,
       secure: mailPort === 465, // SSL for port 465, STARTTLS for 587
-      auth: {
-        user: this.config.get('MAIL_USER'),
-        pass: this.config.get('MAIL_PASSWORD'),
-      },
+      auth: { user: mailUser, pass: mailPass },
     });
 
     try {
-      const host = this.config.get('RABBITMQ_HOST');
-      const port = this.config.get('RABBITMQ_PORT');
-      const user = this.config.get('RABBITMQ_USER');
-      const password = this.config.get('RABBITMQ_PASSWORD');
+      const host: string = this.config.get('RABBITMQ_HOST');
+      const port: number = this.config.get('RABBITMQ_PORT');
+      const user: string = this.config.get('RABBITMQ_USER');
+      const password: string = this.config.get('RABBITMQ_PASSWORD');
 
       this.connection = await amqplib.connect(
         `amqp://${user}:${password}@${host}:${port}`,
@@ -123,14 +123,10 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
       });
 
       if (!application) {
-        throw new Error(
-          `Application not found: ${payload.applicationId}`,
-        );
+        throw new Error(`Application not found: ${payload.applicationId}`);
       }
 
-      await this.sendNotificationEmail(
-        application as unknown as ApplicationWithRelations,
-      );
+      await this.sendNotificationEmail(application);
 
       this.channel?.ack(msg);
       this.logger.log(
@@ -175,8 +171,9 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
     const ownerEmail = job.company.owner.email;
     const applicationDate = createdAt.toISOString().split('T')[0];
 
+    const from: string = this.config.get('MAIL_USER');
     await this.transporter!.sendMail({
-      from: this.config.get('MAIL_USER'),
+      from,
       to: ownerEmail,
       subject: `New Application: ${job.title}`,
       html: `
