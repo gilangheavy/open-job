@@ -184,12 +184,16 @@ describe('ApplicationsController', () => {
   // -----------------------------------------------------------------------
   describe('getByUser()', () => {
     it('should return applications for a user', async () => {
-      service.findByUser.mockResolvedValue(mockPaginatedResult);
+      service.findByUser.mockResolvedValue({
+        data: mockPaginatedResult,
+        source: 'database',
+      });
 
       const result = await controller.getByUser(
         APPLICANT_UUID,
         mockApplicantUser,
         { page: 1, limit: 10 },
+        mockRes,
       );
 
       expect(service.findByUser).toHaveBeenCalledWith(
@@ -197,6 +201,7 @@ describe('ApplicationsController', () => {
         APPLICANT_UUID,
         { page: 1, limit: 10 },
       );
+      expect(mockRes.header).toHaveBeenCalledWith('X-Data-Source', 'database');
       expect(result).toEqual(mockPaginatedResult);
     });
 
@@ -207,7 +212,7 @@ describe('ApplicationsController', () => {
         controller.getByUser(APPLICANT_UUID, mockOwnerUser, {
           page: 1,
           limit: 10,
-        }),
+        }, mockRes),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -217,17 +222,23 @@ describe('ApplicationsController', () => {
   // -----------------------------------------------------------------------
   describe('getByJob()', () => {
     it('should return applications for a job', async () => {
-      service.findByJob.mockResolvedValue(mockPaginatedResult);
-
-      const result = await controller.getByJob(JOB_UUID, mockOwnerUser, {
-        page: 1,
-        limit: 10,
+      service.findByJob.mockResolvedValue({
+        data: mockPaginatedResult,
+        source: 'database',
       });
+
+      const result = await controller.getByJob(
+        JOB_UUID,
+        mockOwnerUser,
+        { page: 1, limit: 10 },
+        mockRes,
+      );
 
       expect(service.findByJob).toHaveBeenCalledWith(JOB_UUID, OWNER_UUID, {
         page: 1,
         limit: 10,
       });
+      expect(mockRes.header).toHaveBeenCalledWith('X-Data-Source', 'database');
       expect(result).toEqual(mockPaginatedResult);
     });
 

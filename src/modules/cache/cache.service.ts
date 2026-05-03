@@ -47,4 +47,29 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   async del(key: string): Promise<void> {
     await this.client.del(key);
   }
+
+  /**
+   * Delete all keys matching a glob pattern using SCAN (non-blocking).
+   * Use for paginated cache invalidation, e.g. `applications:user:{uuid}:*`.
+   */
+  async delPattern(pattern: string): Promise<void> {
+    let cursor = '0';
+    const matchedKeys: string[] = [];
+
+    do {
+      const [nextCursor, keys] = await this.client.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
+      cursor = nextCursor;
+      matchedKeys.push(...keys);
+    } while (cursor !== '0');
+
+    if (matchedKeys.length > 0) {
+      await Promise.all(matchedKeys.map((key) => this.client.del(key)));
+    }
+  }
 }

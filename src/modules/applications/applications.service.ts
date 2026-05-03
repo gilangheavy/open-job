@@ -23,8 +23,15 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const cacheKey = (uuid: string) => `applications:${uuid}`;
-const userCacheKey = (userUuid: string) => `applications:user:${userUuid}`;
-const jobCacheKey = (jobUuid: string) => `applications:job:${jobUuid}`;
+const userCacheKey = (userUuid: string, page: number, limit: number) =>
+  `applications:user:${userUuid}:p${page}:l${limit}`;
+const jobCacheKey = (jobUuid: string, page: number, limit: number) =>
+  `applications:job:${jobUuid}:p${page}:l${limit}`;
+
+/** Wildcard patterns for invalidating all paginated pages of a list. */
+const userCachePattern = (userUuid: string) =>
+  `applications:user:${userUuid}:*`;
+const jobCachePattern = (jobUuid: string) => `applications:job:${jobUuid}:*`;
 
 type CompanyWithOwner = Company & { owner: User };
 type JobWithCompany = Job & { company: CompanyWithOwner };
@@ -42,6 +49,14 @@ export type FindListResult<T> = {
   data: T;
   source: 'cache' | 'database';
 };
+
+/**
+ * Internal Redis entry for single-record cache.
+ * Extends the public DTO with `_ownerUuid` so both the applicant
+ * AND the company owner can be authorized from cached data alone.
+ * `_ownerUuid` is never returned to the client.
+ */
+type CachedApplicationEntry = ApplicationResponseDto & { _ownerUuid: string };
 
 /**
  * Valid status transitions for the application state machine.
@@ -118,10 +133,10 @@ export class ApplicationsService {
       applicationId: application.uuid,
     });
 
-    // Invalidate user and job caches
+    // Invalidate all paginated list caches for this user and job
     await Promise.all([
-      this.cache.del(userCacheKey(userUuid)),
-      this.cache.del(jobCacheKey(job.uuid)),
+      this.cache.delPattern(userCachePattern(userUuid)),
+      this.cache.delPattern(jobCachePattern(job.uuid)),
     ]);
 
     return this.toResponse(application);
@@ -167,10 +182,17 @@ export class ApplicationsService {
       throw new NotFoundException('Application not found');
     }
 
-    const cached = await this.cache.get<ApplicationResponseDto>(cacheKey(uuid));
+    const cached = await this.cache.get<CachedApplicationEntry>(cacheKey(uuid));
     if (cached) {
-      this.assertCanRead(cached, requesterUuid);
-      return { data: cached, source: 'cache' };
+      const { _ownerUuid, ...data } = cached;
+      const isApplicant = data.userId === requesterUuid;
+      const isOwner = _ownerUuid === requesterUuid;
+      if (!isApplicant && !isOwner) {
+        throw new ForbiddenException(
+          'You do not have access to this application',
+        );
+      }
+      return { data, source: 'cache' };
     }
 
     const application = await this.prisma.client.application.findUnique({
@@ -185,11 +207,15 @@ export class ApplicationsService {
       throw new NotFoundException('Application not found');
     }
 
-    const app = application;
-    this.assertCanReadFull(app, requesterUuid);
+    this.assertCanReadFull(application, requesterUuid);
 
-    const response = this.toResponse(app);
-    await this.cache.set(cacheKey(uuid), response, CACHE_TTL);
+    const response = this.toResponse(application);
+    // Store with owner UUID for authorization on cache hits
+    const entry: CachedApplicationEntry = {
+      ...response,
+      _ownerUuid: application.job.company.owner.uuid,
+    };
+    await this.cache.set(cacheKey(uuid), entry, CACHE_TTL);
     return { data: response, source: 'database' };
   }
 
@@ -206,9 +232,10 @@ export class ApplicationsService {
       throw new ForbiddenException('You can only view your own applications');
     }
 
-    const cached = await this.cache.get<
-      PaginatedResult<ApplicationResponseDto>
-    >(userCacheKey(targetUserUuid));
+    const { page, limit } = query;
+    const cached = await this.cache.get<PaginatedResult<ApplicationResponseDto>>(
+      userCacheKey(targetUserUuid, page, limit),
+    );
     if (cached) return { data: cached, source: 'cache' };
 
     const user = await this.prisma.client.user.findUnique({
@@ -218,7 +245,6 @@ export class ApplicationsService {
       throw new NotFoundException('User not found');
     }
 
-    const { page, limit } = query;
     const skip = (page - 1) * limit;
 
     const [applications, total] = await Promise.all([
@@ -249,7 +275,11 @@ export class ApplicationsService {
       },
     };
 
-    await this.cache.set(userCacheKey(targetUserUuid), result, CACHE_TTL);
+    await this.cache.set(
+      userCacheKey(targetUserUuid, page, limit),
+      result,
+      CACHE_TTL,
+    );
     return { data: result, source: 'database' };
   }
 
@@ -262,11 +292,8 @@ export class ApplicationsService {
       throw new NotFoundException('Job not found');
     }
 
-    const cached = await this.cache.get<
-      PaginatedResult<ApplicationResponseDto>
-    >(jobCacheKey(jobUuid));
-    if (cached) return { data: cached, source: 'cache' };
-
+    // Authorization MUST happen before any cache read to prevent IDOR:
+    // a cached response must never be served to an unauthorized requester.
     const job = await this.prisma.client.job.findUnique({
       where: { uuid: jobUuid },
       include: { company: { include: { owner: true } } },
@@ -274,15 +301,17 @@ export class ApplicationsService {
     if (!job) {
       throw new NotFoundException('Job not found');
     }
-
-    const jobWithCompany = job;
-    if (jobWithCompany.company.owner.uuid !== requesterUuid) {
+    if (job.company.owner.uuid !== requesterUuid) {
       throw new ForbiddenException(
         'Only the company owner can view job applications',
       );
     }
 
     const { page, limit } = query;
+    const cached = await this.cache.get<PaginatedResult<ApplicationResponseDto>>(
+      jobCacheKey(jobUuid, page, limit),
+    );
+    if (cached) return { data: cached, source: 'cache' };
     const skip = (page - 1) * limit;
 
     const [applications, total] = await Promise.all([
@@ -313,7 +342,11 @@ export class ApplicationsService {
       },
     };
 
-    await this.cache.set(jobCacheKey(jobUuid), result, CACHE_TTL);
+    await this.cache.set(
+      jobCacheKey(jobUuid, page, limit),
+      result,
+      CACHE_TTL,
+    );
     return { data: result, source: 'database' };
   }
 
@@ -362,6 +395,12 @@ export class ApplicationsService {
     await this.prisma.client.$executeRaw`
       DELETE FROM applications WHERE id = ${application.id}
     `;
+
+    await this.invalidateCaches(
+      uuid,
+      application.user.uuid,
+      application.job.uuid,
+    );
   }
 
   async invalidateCaches(
@@ -371,8 +410,8 @@ export class ApplicationsService {
   ): Promise<void> {
     await Promise.all([
       this.cache.del(cacheKey(applicationUuid)),
-      this.cache.del(userCacheKey(userUuid)),
-      this.cache.del(jobCacheKey(jobUuid)),
+      this.cache.delPattern(userCachePattern(userUuid)),
+      this.cache.delPattern(jobCachePattern(jobUuid)),
     ]);
   }
 
@@ -413,21 +452,6 @@ export class ApplicationsService {
     }
 
     return application;
-  }
-
-  /** Check read permission using the lightweight response DTO (from cache). */
-  private assertCanRead(
-    response: ApplicationResponseDto,
-    requesterUuid: string,
-  ): void {
-    // The DTO only has userId (applicant). For company owner check we need
-    // the full record — so cached data is only allowed for the applicant.
-    // Owner access will always hit the DB if not in cache (acceptable).
-    if (response.userId !== requesterUuid) {
-      throw new ForbiddenException(
-        'You do not have access to this application',
-      );
-    }
   }
 
   /** Full permission check using the complete Prisma record. */

@@ -144,6 +144,7 @@ describe('ApplicationsService', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
+      delPattern: jest.fn(),
     } as unknown as jest.Mocked<CacheService>;
 
     queue = {
@@ -208,10 +209,12 @@ describe('ApplicationsService', () => {
 
       await service.create(APPLICANT_UUID, dto);
 
-      expect(cache.del).toHaveBeenCalledWith(
-        `applications:user:${APPLICANT_UUID}`,
+      expect(cache.delPattern).toHaveBeenCalledWith(
+        `applications:user:${APPLICANT_UUID}:*`,
       );
-      expect(cache.del).toHaveBeenCalledWith(`applications:job:${JOB_UUID}`);
+      expect(cache.delPattern).toHaveBeenCalledWith(
+        `applications:job:${JOB_UUID}:*`,
+      );
     });
 
     it('should throw NotFoundException when job does not exist', async () => {
@@ -296,7 +299,11 @@ describe('ApplicationsService', () => {
   // -----------------------------------------------------------------------
   describe('findByUuid()', () => {
     it('should return cached application if present in Redis', async () => {
-      cache.get.mockResolvedValue(mockApplicationResponse);
+      // Cache stores CachedApplicationEntry (DTO + _ownerUuid)
+      cache.get.mockResolvedValue({
+        ...mockApplicationResponse,
+        _ownerUuid: OWNER_UUID,
+      });
 
       const result = await service.findByUuid(APPLICATION_UUID, APPLICANT_UUID);
 
@@ -308,18 +315,43 @@ describe('ApplicationsService', () => {
       expect(result.source).toBe('cache');
     });
 
+    it('should allow company owner to access application from cache', async () => {
+      cache.get.mockResolvedValue({
+        ...mockApplicationResponse,
+        _ownerUuid: OWNER_UUID,
+      });
+
+      const result = await service.findByUuid(APPLICATION_UUID, OWNER_UUID);
+
+      expect(result.data).toEqual(mockApplicationResponse);
+      expect(result.source).toBe('cache');
+      expect(prisma.client.application.findUnique).not.toHaveBeenCalled();
+    });
+
     it('should fetch from DB and cache result on cache miss', async () => {
       cache.get.mockResolvedValue(null);
       prisma.client.application.findUnique.mockResolvedValue(mockApplication);
 
       const result = await service.findByUuid(APPLICATION_UUID, APPLICANT_UUID);
 
+      // Cache entry must include _ownerUuid for future owner-auth on cache hits
       expect(cache.set).toHaveBeenCalledWith(
         `applications:${APPLICATION_UUID}`,
-        mockApplicationResponse,
+        { ...mockApplicationResponse, _ownerUuid: OWNER_UUID },
         3600,
       );
       expect(result.source).toBe('database');
+    });
+
+    it('should throw ForbiddenException for unauthorized user (cache hit)', async () => {
+      cache.get.mockResolvedValue({
+        ...mockApplicationResponse,
+        _ownerUuid: OWNER_UUID,
+      });
+
+      await expect(
+        service.findByUuid(APPLICATION_UUID, OTHER_UUID),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should allow job company owner to access application', async () => {
@@ -339,7 +371,6 @@ describe('ApplicationsService', () => {
         service.findByUuid(APPLICATION_UUID, OTHER_UUID),
       ).rejects.toThrow(ForbiddenException);
     });
-
     it('should throw NotFoundException when application not found', async () => {
       cache.get.mockResolvedValue(null);
       prisma.client.application.findUnique.mockResolvedValue(null);
@@ -374,9 +405,10 @@ describe('ApplicationsService', () => {
       });
 
       expect(cache.get).toHaveBeenCalledWith(
-        `applications:user:${APPLICANT_UUID}`,
+        `applications:user:${APPLICANT_UUID}:p1:l10`,
       );
-      expect(result).toEqual(cachedList);
+      expect(result.data).toEqual(cachedList);
+      expect(result.source).toBe('cache');
     });
 
     it('should fetch from DB on cache miss and cache result', async () => {
@@ -391,11 +423,12 @@ describe('ApplicationsService', () => {
       });
 
       expect(cache.set).toHaveBeenCalledWith(
-        `applications:user:${APPLICANT_UUID}`,
+        `applications:user:${APPLICANT_UUID}:p1:l10`,
         expect.any(Object),
         3600,
       );
-      expect(result.items[0]).toEqual(mockApplicationResponse);
+      expect(result.data.items[0]).toEqual(mockApplicationResponse);
+      expect(result.source).toBe('database');
     });
 
     it('should throw ForbiddenException when accessing another user applications', async () => {
@@ -432,6 +465,7 @@ describe('ApplicationsService', () => {
         items: [mockApplicationResponse],
         meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
       };
+      prisma.client.job.findUnique.mockResolvedValue(mockJob); // auth check always runs first
       cache.get.mockResolvedValue(cachedList);
 
       const result = await service.findByJob(JOB_UUID, OWNER_UUID, {
@@ -439,8 +473,27 @@ describe('ApplicationsService', () => {
         limit: 10,
       });
 
-      expect(cache.get).toHaveBeenCalledWith(`applications:job:${JOB_UUID}`);
-      expect(result).toEqual(cachedList);
+      expect(cache.get).toHaveBeenCalledWith(
+        `applications:job:${JOB_UUID}:p1:l10`,
+      );
+      expect(result.data).toEqual(cachedList);
+      expect(result.source).toBe('cache');
+    });
+
+    it('should block non-owner even when list is in cache (IDOR protection)', async () => {
+      const cachedList = {
+        items: [mockApplicationResponse],
+        meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+      };
+      prisma.client.job.findUnique.mockResolvedValue(mockJob);
+      cache.get.mockResolvedValue(cachedList); // cache is populated
+
+      await expect(
+        service.findByJob(JOB_UUID, OTHER_UUID, { page: 1, limit: 10 }),
+      ).rejects.toThrow(ForbiddenException);
+
+      // Authorization throws before cache is ever read
+      expect(cache.get).not.toHaveBeenCalled();
     });
 
     it('should fetch from DB on cache miss and cache result', async () => {
@@ -455,15 +508,15 @@ describe('ApplicationsService', () => {
       });
 
       expect(cache.set).toHaveBeenCalledWith(
-        `applications:job:${JOB_UUID}`,
+        `applications:job:${JOB_UUID}:p1:l10`,
         expect.any(Object),
         3600,
       );
-      expect(result.items[0]).toEqual(mockApplicationResponse);
+      expect(result.data.items[0]).toEqual(mockApplicationResponse);
+      expect(result.source).toBe('database');
     });
 
     it('should throw ForbiddenException when non-owner accesses job applications', async () => {
-      cache.get.mockResolvedValue(null);
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
 
       await expect(
@@ -472,7 +525,6 @@ describe('ApplicationsService', () => {
     });
 
     it('should throw NotFoundException when job does not exist', async () => {
-      cache.get.mockResolvedValue(null);
       prisma.client.job.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -598,10 +650,12 @@ describe('ApplicationsService', () => {
       expect(cache.del).toHaveBeenCalledWith(
         `applications:${APPLICATION_UUID}`,
       );
-      expect(cache.del).toHaveBeenCalledWith(
-        `applications:user:${APPLICANT_UUID}`,
+      expect(cache.delPattern).toHaveBeenCalledWith(
+        `applications:user:${APPLICANT_UUID}:*`,
       );
-      expect(cache.del).toHaveBeenCalledWith(`applications:job:${JOB_UUID}`);
+      expect(cache.delPattern).toHaveBeenCalledWith(
+        `applications:job:${JOB_UUID}:*`,
+      );
     });
   });
 
@@ -616,6 +670,23 @@ describe('ApplicationsService', () => {
       await service.remove(APPLICATION_UUID, APPLICANT_UUID);
 
       expect(prisma.client.$executeRaw).toHaveBeenCalled();
+    });
+
+    it('should invalidate all related caches after deletion', async () => {
+      prisma.client.application.findUnique.mockResolvedValue(mockApplication);
+      prisma.client.$executeRaw.mockResolvedValue(1);
+
+      await service.remove(APPLICATION_UUID, APPLICANT_UUID);
+
+      expect(cache.del).toHaveBeenCalledWith(
+        `applications:${APPLICATION_UUID}`,
+      );
+      expect(cache.delPattern).toHaveBeenCalledWith(
+        `applications:user:${APPLICANT_UUID}:*`,
+      );
+      expect(cache.delPattern).toHaveBeenCalledWith(
+        `applications:job:${JOB_UUID}:*`,
+      );
     });
 
     it('should throw ForbiddenException when non-applicant tries to delete', async () => {
