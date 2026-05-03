@@ -13,6 +13,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiHeader,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -28,11 +37,18 @@ import {
   type PaginatedResult,
 } from '../profile/dto/pagination-query.dto';
 
+@ApiTags('Jobs')
 @Controller('jobs')
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all jobs (paginated, filterable)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'title', required: false, type: String, description: 'Filter by job title' })
+  @ApiQuery({ name: 'company-name', required: false, type: String, description: 'Filter by company name' })
+  @ApiResponse({ status: 200, description: 'Paginated list of jobs' })
   getAll(
     @Query() query: JobQueryDto,
   ): Promise<PaginatedResult<JobResponseDto>> {
@@ -42,6 +58,11 @@ export class JobsController {
   // NOTE: static-prefix routes must be declared before :uuid to avoid
   // NestJS / Express route-matching conflicts.
   @Get('company/:companyId')
+  @ApiOperation({ summary: 'List jobs by company UUID' })
+  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Paginated list of jobs for the given company' })
   getByCompany(
     @Param('companyId', ParseUUIDPipe) companyId: string,
     @Query() query: PaginationQueryDto,
@@ -50,6 +71,11 @@ export class JobsController {
   }
 
   @Get('category/:categoryId')
+  @ApiOperation({ summary: 'List jobs by category UUID' })
+  @ApiParam({ name: 'categoryId', description: 'Category UUID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Paginated list of jobs for the given category' })
   getByCategory(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Query() query: PaginationQueryDto,
@@ -58,6 +84,11 @@ export class JobsController {
   }
 
   @Get(':uuid')
+  @ApiOperation({ summary: 'Get a job by UUID' })
+  @ApiParam({ name: 'uuid', description: 'Job UUID' })
+  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiResponse({ status: 200, description: 'Job found', type: JobResponseDto })
+  @ApiResponse({ status: 404, description: 'Job not found' })
   async getById(
     @Param('uuid', ParseUUIDPipe) uuid: string,
     @Res({ passthrough: true }) res: Response,
@@ -70,6 +101,11 @@ export class JobsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a new job posting' })
+  @ApiResponse({ status: 201, description: 'Job created', type: JobResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — company not owned by user' })
   create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateJobDto,
@@ -81,6 +117,12 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update a job posting' })
+  @ApiParam({ name: 'uuid', description: 'Job UUID' })
+  @ApiResponse({ status: 200, description: 'Job updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the owner' })
+  @ApiResponse({ status: 404, description: 'Job not found' })
   async update(
     @Param('uuid', ParseUUIDPipe) uuid: string,
     @CurrentUser() user: JwtPayload,
@@ -94,6 +136,12 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Delete (soft-delete) a job posting' })
+  @ApiParam({ name: 'uuid', description: 'Job UUID' })
+  @ApiResponse({ status: 200, description: 'Job deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the owner' })
+  @ApiResponse({ status: 404, description: 'Job not found' })
   async remove(
     @Param('uuid', ParseUUIDPipe) uuid: string,
     @CurrentUser() user: JwtPayload,

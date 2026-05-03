@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
@@ -19,6 +20,23 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new CorrelationIdInterceptor());
+
+  const config = new DocumentBuilder()
+    .setTitle('OpenJob API')
+    .setDescription(
+      'Enterprise-scale RESTful API for managing internal recruitment processes.',
+    )
+    .setVersion('1.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'access-token',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
   await app.listen(process.env.PORT ?? 5000);
 }
