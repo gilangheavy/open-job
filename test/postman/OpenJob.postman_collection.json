@@ -3073,8 +3073,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"it should response 404 status code\", () => {",
-                  "    pm.expect(pm.response).to.have.status(404);",
+                  "pm.test(\"it should response 400 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
                   "pm.test(\"response body should have correct property and value\", () => {",
@@ -3136,8 +3136,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"it should response 404 status code\", () => {",
-                  "    pm.expect(pm.response).to.have.status(404);",
+                  "pm.test(\"it should response 400 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
                   "pm.test(\"response body should have correct property and value\", () => {",
@@ -3199,8 +3199,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"it should response 404 status code\", () => {",
-                  "    pm.expect(pm.response).to.have.status(404);",
+                  "pm.test(\"it should response 400 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
                   "pm.test(\"response body should have correct property and value\", () => {",
@@ -3950,7 +3950,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -4733,7 +4733,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -5291,7 +5291,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -5852,8 +5852,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Duplicate application returns 400', () => {",
-                  "    pm.expect(pm.response).to.have.status(400);",
+                  "pm.test('Duplicate application returns 409', () => {",
+                  "    pm.expect(pm.response).to.have.status(409);",
                   "});",
                   "",
                   "pm.test('Error message indicates duplicate', () => {",
