@@ -130,7 +130,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -184,7 +186,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -238,7 +242,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -297,7 +303,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -3956,7 +3964,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"companyId\": \"{{jobCompanyId}}\",\n    \"categoryId\": \"{{jobCategoryId}}\",\n    \"title\": \"Senior Backend Developer\",\n    \"description\": \"We are looking for experienced backend developer\",\n    \"type\": \"full-time\",\n    \"location\": \"Jakarta\",\n    \"salary\": 15000000\n}",
+              "raw": "{\"companyId\": \"{{jobCompanyId}}\", \"categoryId\": \"{{jobCategoryId}}\", \"title\": \"Senior Backend Developer\", \"description\": \"We are looking for experienced backend developer\", \"type\": \"full-time\", \"location\": \"Jakarta\", \"salary\": 15000000}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3964,6 +3972,70 @@
               }
             },
             "url": "{{baseURL}}/jobs"
+          },
+          "response": []
+        },
+        {
+          "name": "[Setup] - Create Temp Job for Soft-delete Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "pm.environment.set('bookmarkDeletedJobId', responseJson.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerAccessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"companyId\": \"{{jobCompanyId}}\", \"categoryId\": \"{{jobCategoryId}}\", \"title\": \"Temp Job to Delete\", \"description\": \"Will be soft-deleted for bookmark test\", \"type\": \"full-time\", \"location\": \"Remote\", \"salary\": 5000000}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/jobs"
+          },
+          "response": []
+        },
+        {
+          "name": "[Setup] - Soft-delete Temp Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"it should response 200 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerAccessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseURL}}/jobs/{{bookmarkDeletedJobId}}"
           },
           "response": []
         },
@@ -4088,6 +4160,58 @@
           "response": []
         },
         {
+          "name": "Add Bookmark to Soft-deleted Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 404 for soft-deleted job', () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('object');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/jobs/{{bookmarkDeletedJobId}}/bookmark"
+          },
+          "response": []
+        },
+        {
           "name": "Add Bookmark",
           "event": [
             {
@@ -4098,11 +4222,74 @@
                   "    pm.expect(pm.response).to.have.status(201);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an(\"object\");",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.id).to.be.a('string');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.id).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.jobId).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.userId).to.be.a(\"string\");",
                   "    pm.environment.set('bookmarkId', responseJson.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/jobs/{{jobId}}/bookmark"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Duplicate Bookmark",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 409 for duplicate bookmark', () => {",
+                  "    pm.expect(pm.response).to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('object');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -4142,11 +4329,26 @@
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an(\"object\");",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.bookmarks).to.be.an('array');",
-                  "    pm.expect(responseJson.data.bookmarks.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.items.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.data.meta).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.meta.total).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "pm.test('response X-Data-Source header should be database', () => {",
+                  "    pm.expect(pm.response.headers.get('X-Data-Source')).to.equal('database');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -4167,14 +4369,98 @@
           "response": []
         },
         {
+          "name": "Get All User Bookmarks - Cache Hit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 200 status code', () => {",
+                  "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response X-Data-Source header should be cache', () => {",
+                  "    pm.expect(pm.response.headers.get('X-Data-Source')).to.equal('cache');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseURL}}/bookmarks"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bookmark by Id without Authentication",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 401 status code', () => {",
+                  "    pm.expect(pm.response).to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('object');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseURL}}/jobs/{{jobId}}/bookmark/{{bookmarkId}}"
+          },
+          "response": []
+        },
+        {
           "name": "Get Bookmark by Id with Invalid Id",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 404 status code', () => {",
+                  "pm.test('it should response 404 for invalid bookmark id', () => {",
                   "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('object');",
                   "});",
                   "",
                   "pm.test('response body should have correct property and value', () => {",
@@ -4196,7 +4482,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseURL}}/jobs/{{jobId}}/bookmark/xxx"
+            "url": "{{baseURL}}/jobs/{{jobId}}/bookmark/00000000-0000-7000-8000-000000000000"
           },
           "response": []
         },
@@ -4211,11 +4497,17 @@
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    const bookmarkId = pm.environment.get('bookmarkId');",
-                  "    pm.expect(responseJson.status).to.equal('success');",
+                  "    const bookmarkId = pm.environment.get(\"bookmarkId\");",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
                   "    pm.expect(responseJson.data.id).to.equal(bookmarkId);",
+                  "    pm.expect(responseJson.data.jobId).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.userId).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -4244,6 +4536,59 @@
                 "exec": [
                   "pm.test('it should response 200 status code', () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseURL}}/jobs/{{jobId}}/bookmark"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Non-existent Bookmark",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 404 when bookmark does not exist', () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should be an object', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('object');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -4792,7 +5137,9 @@
             {
               "listen": "test",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             }
