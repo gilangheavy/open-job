@@ -46,8 +46,18 @@ export class JobsController {
   @ApiOperation({ summary: 'List all jobs (paginated, filterable)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'title', required: false, type: String, description: 'Filter by job title' })
-  @ApiQuery({ name: 'company-name', required: false, type: String, description: 'Filter by company name' })
+  @ApiQuery({
+    name: 'title',
+    required: false,
+    type: String,
+    description: 'Filter by job title',
+  })
+  @ApiQuery({
+    name: 'company-name',
+    required: false,
+    type: String,
+    description: 'Filter by company name',
+  })
   @ApiResponse({ status: 200, description: 'Paginated list of jobs' })
   getAll(
     @Query() query: JobQueryDto,
@@ -62,7 +72,10 @@ export class JobsController {
   @ApiParam({ name: 'companyId', description: 'Company UUID' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiResponse({ status: 200, description: 'Paginated list of jobs for the given company' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of jobs for the given company',
+  })
   getByCompany(
     @Param('companyId', ParseUUIDPipe) companyId: string,
     @Query() query: PaginationQueryDto,
@@ -75,7 +88,10 @@ export class JobsController {
   @ApiParam({ name: 'categoryId', description: 'Category UUID' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiResponse({ status: 200, description: 'Paginated list of jobs for the given category' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of jobs for the given category',
+  })
   getByCategory(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Query() query: PaginationQueryDto,
@@ -86,7 +102,11 @@ export class JobsController {
   @Get(':uuid')
   @ApiOperation({ summary: 'Get a job by UUID' })
   @ApiParam({ name: 'uuid', description: 'Job UUID' })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
   @ApiResponse({ status: 200, description: 'Job found', type: JobResponseDto })
   @ApiResponse({ status: 404, description: 'Job not found' })
   async getById(
@@ -103,9 +123,16 @@ export class JobsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Create a new job posting' })
-  @ApiResponse({ status: 201, description: 'Job created', type: JobResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Job created',
+    type: JobResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden — company not owned by user' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — company not owned by user',
+  })
   create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateJobDto,

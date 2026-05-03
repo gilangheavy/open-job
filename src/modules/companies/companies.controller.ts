@@ -54,8 +54,16 @@ export class CompaniesController {
   @Get(':uuid')
   @ApiOperation({ summary: 'Get a company by UUID' })
   @ApiParam({ name: 'uuid', description: 'Company UUID' })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'Company found', type: CompanyResponseDto })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Company found',
+    type: CompanyResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Company not found' })
   async getById(
     @Param('uuid') uuid: string,
@@ -71,7 +79,11 @@ export class CompaniesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Create a new company' })
-  @ApiResponse({ status: 201, description: 'Company created', type: CompanyResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Company created',
+    type: CompanyResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @CurrentUser() user: JwtPayload,

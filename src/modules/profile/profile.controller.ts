@@ -26,15 +26,21 @@ export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get the authenticated user\'s profile' })
-  @ApiResponse({ status: 200, description: 'User profile', type: UserResponseDto })
+  @ApiOperation({ summary: "Get the authenticated user's profile" })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProfile(@CurrentUser() user: JwtPayload): Promise<UserResponseDto> {
     return this.profileService.getProfile(user.id);
   }
 
   @Get('applications')
-  @ApiOperation({ summary: 'Get the authenticated user\'s job applications (paginated)' })
+  @ApiOperation({
+    summary: "Get the authenticated user's job applications (paginated)",
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Paginated list of applications' })
@@ -46,7 +52,9 @@ export class ProfileController {
   }
 
   @Get('bookmarks')
-  @ApiOperation({ summary: 'Get the authenticated user\'s bookmarked jobs (paginated)' })
+  @ApiOperation({
+    summary: "Get the authenticated user's bookmarked jobs (paginated)",
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Paginated list of bookmarks' })

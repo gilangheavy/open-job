@@ -8,12 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import {
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticationsService } from './authentications.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -34,7 +29,10 @@ export class AuthenticationsController {
   @Throttle({ default: THROTTLER_LIMITS.moderate })
   @ApiOperation({ summary: 'Login and obtain JWT token pair' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 201, description: 'Login successful — returns access & refresh tokens' })
+  @ApiResponse({
+    status: 201,
+    description: 'Login successful — returns access & refresh tokens',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto): Promise<TokenPair> {
     return this.authenticationsService.login(dto);

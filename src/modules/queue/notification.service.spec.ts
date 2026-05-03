@@ -168,10 +168,7 @@ describe('NotificationService', () => {
   });
 
   describe('processMessage', () => {
-    function makeMessage(
-      payload: unknown,
-      retryCount = 0,
-    ): amqplib.Message {
+    function makeMessage(payload: unknown, retryCount = 0): amqplib.Message {
       return {
         content: Buffer.from(JSON.stringify(payload)),
         properties: {
@@ -241,7 +238,13 @@ describe('NotificationService', () => {
       const msg = {
         content: Buffer.from('not-valid-json'),
         properties: { headers: {} },
-        fields: { deliveryTag: 1, exchange: '', routingKey: '', redelivered: false, consumerTag: '' },
+        fields: {
+          deliveryTag: 1,
+          exchange: '',
+          routingKey: '',
+          redelivered: false,
+          consumerTag: '',
+        },
       } as unknown as amqplib.Message;
 
       await service.processMessage(msg);
@@ -261,7 +264,12 @@ describe('NotificationService', () => {
     });
 
     it('should ack and republish with incremented retry count on transient failure (retryCount=0)', async () => {
-      jest.spyOn(service as unknown as { delay: (ms: number) => Promise<void> }, 'delay').mockResolvedValue(undefined);
+      jest
+        .spyOn(
+          service as unknown as { delay: (ms: number) => Promise<void> },
+          'delay',
+        )
+        .mockResolvedValue(undefined);
       prisma.client.application.findUnique.mockRejectedValueOnce(
         new Error('DB error'),
       );
@@ -282,7 +290,12 @@ describe('NotificationService', () => {
     });
 
     it('should ack and republish with incremented retry count on transient failure (retryCount=1)', async () => {
-      jest.spyOn(service as unknown as { delay: (ms: number) => Promise<void> }, 'delay').mockResolvedValue(undefined);
+      jest
+        .spyOn(
+          service as unknown as { delay: (ms: number) => Promise<void> },
+          'delay',
+        )
+        .mockResolvedValue(undefined);
       prisma.client.application.findUnique.mockRejectedValueOnce(
         new Error('DB error'),
       );

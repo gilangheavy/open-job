@@ -45,7 +45,11 @@ export class ApplicationsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Submit a job application' })
-  @ApiResponse({ status: 201, description: 'Application created', type: ApplicationResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Application created',
+    type: ApplicationResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 409, description: 'Already applied to this job' })
   create(
@@ -71,9 +75,19 @@ export class ApplicationsController {
   @ApiParam({ name: 'userId', description: 'User UUID' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'Paginated list of applications for the user' })
-  @ApiResponse({ status: 403, description: 'Forbidden — cannot view another user\'s applications' })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of applications for the user',
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden — cannot view another user's applications",
+  })
   async getByUser(
     @Param('userId') userId: string,
     @CurrentUser() user: JwtPayload,
@@ -94,8 +108,15 @@ export class ApplicationsController {
   @ApiParam({ name: 'jobId', description: 'Job UUID' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'Paginated list of applications for the job' })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of applications for the job',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden — not the job owner' })
   async getByJob(
     @Param('jobId') jobId: string,
@@ -115,8 +136,16 @@ export class ApplicationsController {
   @Get(':uuid')
   @ApiOperation({ summary: 'Get a single application by UUID' })
   @ApiParam({ name: 'uuid', description: 'Application UUID' })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'Application found', type: ApplicationResponseDto })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application found',
+    type: ApplicationResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Application not found' })
   async getById(
     @Param('uuid') uuid: string,
@@ -136,7 +165,10 @@ export class ApplicationsController {
   @SkipTransform()
   @ApiOperation({ summary: 'Update application status (company owner only)' })
   @ApiParam({ name: 'uuid', description: 'Application UUID' })
-  @ApiResponse({ status: 200, description: 'Application status updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Application status updated successfully',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden — not the job owner' })
   @ApiResponse({ status: 404, description: 'Application not found' })
   async updateStatus(

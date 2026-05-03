@@ -14,7 +14,9 @@ export class UpdateJobDto {
   @MaxLength(200)
   title?: string;
 
-  @ApiPropertyOptional({ example: 'We are looking for a senior backend engineer...' })
+  @ApiPropertyOptional({
+    example: 'We are looking for a senior backend engineer...',
+  })
   @IsString()
   @IsOptional()
   description?: string;

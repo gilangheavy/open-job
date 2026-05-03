@@ -53,11 +53,19 @@ export class DocumentsController {
     schema: {
       type: 'object',
       properties: {
-        file: { type: 'string', format: 'binary', description: 'PDF file (max 5MB)' },
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF file (max 5MB)',
+        },
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Document uploaded', type: DocumentResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Document uploaded',
+    type: DocumentResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Invalid file type or size' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   upload(
@@ -81,8 +89,16 @@ export class DocumentsController {
   @Get(':uuid')
   @ApiOperation({ summary: 'Get a document by UUID' })
   @ApiParam({ name: 'uuid', description: 'Document UUID' })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'Document found', type: DocumentResponseDto })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Document found',
+    type: DocumentResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Document not found' })
   async getById(
     @Param('uuid') uuid: string,

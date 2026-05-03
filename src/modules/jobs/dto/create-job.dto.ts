@@ -10,12 +10,18 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateJobDto {
-  @ApiProperty({ example: '01935b1c-a3d4-7c5e-8f9a-0b1c2d3e4f50', description: 'Company UUID' })
+  @ApiProperty({
+    example: '01935b1c-a3d4-7c5e-8f9a-0b1c2d3e4f50',
+    description: 'Company UUID',
+  })
   @IsUUID()
   @IsNotEmpty()
   companyId!: string;
 
-  @ApiProperty({ example: '01935b1c-a3d4-7c5e-8f9a-0b1c2d3e4f51', description: 'Category UUID' })
+  @ApiProperty({
+    example: '01935b1c-a3d4-7c5e-8f9a-0b1c2d3e4f51',
+    description: 'Category UUID',
+  })
   @IsUUID()
   @IsNotEmpty()
   categoryId!: string;
@@ -26,7 +32,9 @@ export class CreateJobDto {
   @MaxLength(200)
   title!: string;
 
-  @ApiPropertyOptional({ example: 'We are looking for a skilled backend engineer...' })
+  @ApiPropertyOptional({
+    example: 'We are looking for a skilled backend engineer...',
+  })
   @IsString()
   @IsOptional()
   description?: string;
@@ -37,7 +45,11 @@ export class CreateJobDto {
   @MaxLength(150)
   location?: string;
 
-  @ApiPropertyOptional({ example: 15000000, minimum: 0, description: 'Salary in IDR' })
+  @ApiPropertyOptional({
+    example: 15000000,
+    minimum: 0,
+    description: 'Salary in IDR',
+  })
   @IsNumber()
   @IsOptional()
   @Min(0)
