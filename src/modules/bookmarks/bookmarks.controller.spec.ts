@@ -129,9 +129,17 @@ describe('BookmarksController', () => {
     it('should call service.findByUuid and return BookmarkResponseDto', async () => {
       service.findByUuid.mockResolvedValue(mockBookmarkResponse);
 
-      const result = await controller.findOne(mockUser, JOB_UUID, BOOKMARK_UUID);
+      const result = await controller.findOne(
+        mockUser,
+        JOB_UUID,
+        BOOKMARK_UUID,
+      );
 
-      expect(service.findByUuid).toHaveBeenCalledWith(BOOKMARK_UUID, JOB_UUID, USER_UUID);
+      expect(service.findByUuid).toHaveBeenCalledWith(
+        BOOKMARK_UUID,
+        JOB_UUID,
+        USER_UUID,
+      );
       expect(result).toEqual(mockBookmarkResponse);
     });
 
@@ -146,9 +154,7 @@ describe('BookmarksController', () => {
     });
 
     it('should propagate ForbiddenException from service', async () => {
-      service.findByUuid.mockRejectedValue(
-        new ForbiddenException('No access'),
-      );
+      service.findByUuid.mockRejectedValue(new ForbiddenException('No access'));
 
       await expect(
         controller.findOne(mockUser, JOB_UUID, BOOKMARK_UUID),

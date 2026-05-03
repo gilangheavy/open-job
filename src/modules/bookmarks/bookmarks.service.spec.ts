@@ -244,7 +244,11 @@ describe('BookmarksService', () => {
     it('should return bookmark response when found and user matches', async () => {
       prisma.client.bookmark.findUnique.mockResolvedValue(mockBookmark);
 
-      const result = await service.findByUuid(BOOKMARK_UUID, JOB_UUID, USER_UUID);
+      const result = await service.findByUuid(
+        BOOKMARK_UUID,
+        JOB_UUID,
+        USER_UUID,
+      );
 
       expect(result).toEqual(mockBookmarkResponse);
     });
@@ -294,9 +298,7 @@ describe('BookmarksService', () => {
 
       const result = await service.findAll(USER_UUID, { page: 1, limit: 10 });
 
-      expect(cache.get).toHaveBeenCalledWith(
-        `bookmarks:${USER_UUID}:p1:l10`,
-      );
+      expect(cache.get).toHaveBeenCalledWith(`bookmarks:${USER_UUID}:p1:l10`);
       expect(prisma.client.bookmark.findMany).not.toHaveBeenCalled();
       expect(result.data).toEqual(cachedList);
       expect(result.source).toBe('cache');

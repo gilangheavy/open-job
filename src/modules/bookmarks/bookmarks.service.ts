@@ -112,12 +112,10 @@ export class BookmarksService {
     }
 
     if (bookmark.user.uuid !== requesterUuid) {
-      throw new ForbiddenException(
-        'You do not have access to this bookmark',
-      );
+      throw new ForbiddenException('You do not have access to this bookmark');
     }
 
-    return this.toResponse(bookmark as BookmarkWithRelations);
+    return this.toResponse(bookmark);
   }
 
   async findAll(
@@ -188,4 +186,3 @@ export class BookmarksService {
     };
   }
 }
-
