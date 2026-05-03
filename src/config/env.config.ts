@@ -4,6 +4,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   HOST: z.string().default('localhost'),
 
+  // Comma-separated list of allowed CORS origins, or '*' for any.
+  // Default '*' is intentional for local-dev; production deployments
+  // MUST set an explicit whitelist via the CORS_ORIGIN env var.
+  CORS_ORIGIN: z.string().default('*'),
+
   DATABASE_URL: z.string().min(1),
 
   ACCESS_TOKEN_KEY: z.string().min(1),
