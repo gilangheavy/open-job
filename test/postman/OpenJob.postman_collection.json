@@ -130,9 +130,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -186,9 +184,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -242,9 +238,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -303,9 +297,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -4487,6 +4479,44 @@
           "response": []
         },
         {
+          "name": "Get Bookmark by Id with Wrong JobId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 404 when bookmarkId does not belong to given jobId', () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('response Content-Type header should have application/json value', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "});",
+                  "",
+                  "pm.test('response body should have correct property and value', () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseURL}}/jobs/00000000-0000-7000-8000-000000000001/bookmark/{{bookmarkId}}"
+          },
+          "response": []
+        },
+        {
           "name": "Get Bookmark by Id with Valid Id",
           "event": [
             {
@@ -5137,9 +5167,7 @@
             {
               "listen": "test",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             }
