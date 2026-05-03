@@ -144,6 +144,13 @@ describe('DocumentsService', () => {
       });
     });
 
+    it('should throw BadRequestException when no file is provided', async () => {
+      await expect(
+        service.upload(USER_UUID, undefined as unknown as Express.Multer.File),
+      ).rejects.toThrow(BadRequestException);
+      expect(s3.uploadFile).not.toHaveBeenCalled();
+    });
+
     it('should throw BadRequestException when MIME type is not application/pdf', async () => {
       const file = makeFile({ mimetype: 'image/png' });
 

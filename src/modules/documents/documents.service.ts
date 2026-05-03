@@ -41,6 +41,10 @@ export class DocumentsService {
     userUuid: string,
     file: Express.Multer.File,
   ): Promise<DocumentResponseDto> {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+
     if (file.mimetype !== ALLOWED_MIME) {
       throw new BadRequestException(
         'Invalid file type. Only application/pdf is allowed',
