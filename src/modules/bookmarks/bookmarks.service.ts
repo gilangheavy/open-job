@@ -76,17 +76,10 @@ export class BookmarksService {
         user: { uuid: userUuid },
         job: { uuid: jobUuid },
       },
-      include: { user: true, job: true },
     });
 
     if (!bookmark) {
       throw new NotFoundException('Bookmark not found');
-    }
-
-    if (bookmark.user.uuid !== userUuid) {
-      throw new ForbiddenException(
-        'You do not have permission to delete this bookmark',
-      );
     }
 
     await this.prisma.client.$executeRaw`

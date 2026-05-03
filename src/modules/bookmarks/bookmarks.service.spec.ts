@@ -229,14 +229,6 @@ describe('BookmarksService', () => {
       );
     });
 
-    it('should throw ForbiddenException when requester is not the bookmark owner', async () => {
-      prisma.client.bookmark.findFirst.mockResolvedValue(mockBookmark);
-
-      await expect(service.remove(OTHER_UUID, JOB_UUID)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
     it('should throw NotFoundException for invalid jobUuid format', async () => {
       await expect(service.remove(USER_UUID, 'not-a-uuid')).rejects.toThrow(
         NotFoundException,

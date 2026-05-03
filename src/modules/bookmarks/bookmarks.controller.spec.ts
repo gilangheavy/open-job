@@ -111,16 +111,6 @@ describe('BookmarksController', () => {
       });
     });
 
-    it('should propagate ForbiddenException from service', async () => {
-      service.remove.mockRejectedValue(
-        new ForbiddenException('Not your bookmark'),
-      );
-
-      await expect(controller.remove(mockUser, JOB_UUID)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
     it('should propagate NotFoundException from service', async () => {
       service.remove.mockRejectedValue(
         new NotFoundException('Bookmark not found'),
