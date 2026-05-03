@@ -130,9 +130,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -186,9 +184,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -242,9 +238,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -303,9 +297,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             },
@@ -3377,7 +3369,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"company_id\": \"{{jobCompanyId}}\",\n    \"category_id\": \"{{jobCategoryId}}\",\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Frontend position\",\n    \"job_type\": \"full-time\",\n    \"experience_level\": \"mid\",\n    \"location_type\": \"onsite\",\n    \"status\": \"open\"\n}",
+              "raw": "{\n    \"companyId\": \"{{jobCompanyId}}\",\n    \"categoryId\": \"{{jobCategoryId}}\",\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Frontend position\",\n    \"type\": \"full-time\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3385,6 +3377,47 @@
               }
             },
             "url": "{{baseURL}}/jobs"
+          },
+          "response": []
+        },
+        {
+          "name": "[Setup] - Login for Applications",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('ownerAccessToken', pm.environment.get('accessToken'));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.environment.set('accessToken', responseJson.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{testUserEmail}}\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
           },
           "response": []
         },
@@ -3423,7 +3456,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"user_id\": \"xxx\",\n    \"job_id\": \"xxx\"\n}",
+              "raw": "{\n    \"jobId\": \"xxx\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3541,7 +3574,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"user_id\": \"{{userId}}\",\n    \"job_id\": \"{{applicationJobId}}\",\n    \"status\": \"pending\"\n}",
+              "raw": "{\n    \"jobId\": \"{{applicationJobId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3566,7 +3599,8 @@
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
                   "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.applications).to.be.an('array');",
+                  "    pm.expect(responseJson.data.items).to.be.an('array');",
+                  "    pm.expect(responseJson.data.meta).to.be.an('object');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -3628,15 +3662,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
-                  "    pm.expect(pm.response).to.have.status(200);",
+                  "pm.test('it should response 404 status code', () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
                   "});",
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.applications).to.be.an('array');",
-                  "    pm.expect(responseJson.data.applications).to.have.lengthOf(0);",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -3671,11 +3704,11 @@
                   "    const responseJson = pm.response.json();",
                   "    const userId = pm.environment.get('userId');",
                   "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.applications).to.be.an('array');",
+                  "    pm.expect(responseJson.data.items).to.be.an('array');",
                   "    ",
-                  "    if (responseJson.data.applications.length > 0) {",
-                  "        responseJson.data.applications.forEach(app => {",
-                  "            pm.expect(app.user_id).to.equal(userId);",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(app => {",
+                  "            pm.expect(app.userId).to.equal(userId);",
                   "        });",
                   "    }",
                   "});"
@@ -3704,15 +3737,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
-                  "    pm.expect(pm.response).to.have.status(200);",
+                  "pm.test('it should response 404 status code', () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
                   "});",
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.applications).to.be.an('array');",
-                  "    pm.expect(responseJson.data.applications).to.have.lengthOf(0);",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -3747,11 +3779,11 @@
                   "    const responseJson = pm.response.json();",
                   "    const jobId = pm.environment.get('applicationJobId');",
                   "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.applications).to.be.an('array');",
+                  "    pm.expect(responseJson.data.items).to.be.an('array');",
                   "    ",
-                  "    if (responseJson.data.applications.length > 0) {",
-                  "        responseJson.data.applications.forEach(app => {",
-                  "            pm.expect(app.job_id).to.equal(jobId);",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(app => {",
+                  "            pm.expect(app.jobId).to.equal(jobId);",
                   "        });",
                   "    }",
                   "});"
@@ -3765,7 +3797,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -3849,7 +3881,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -3924,7 +3956,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"company_id\": \"{{jobCompanyId}}\",\n    \"category_id\": \"{{jobCategoryId}}\",\n    \"title\": \"Senior Backend Developer\",\n    \"description\": \"We are looking for experienced backend developer\",\n    \"job_type\": \"full-time\",\n    \"experience_level\": \"senior\",\n    \"location_type\": \"remote\",\n    \"location_city\": \"Jakarta\",\n    \"salary_min\": 15000000,\n    \"salary_max\": 25000000,\n    \"is_salary_visible\": true,\n    \"status\": \"open\"\n}",
+              "raw": "{\n    \"companyId\": \"{{jobCompanyId}}\",\n    \"categoryId\": \"{{jobCategoryId}}\",\n    \"title\": \"Senior Backend Developer\",\n    \"description\": \"We are looking for experienced backend developer\",\n    \"type\": \"full-time\",\n    \"location\": \"Jakarta\",\n    \"salary\": 15000000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4645,11 +4677,22 @@
           "name": "[Setup] Add User",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('cacheUserEmail', 'cache_' + Date.now() + '@example.com');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
                   "const responseJson = pm.response.json();",
-                  "pm.environment.set('newUserId', responseJson.data.id);"
+                  "if (responseJson.data && responseJson.data.id) {",
+                  "    pm.environment.set('newUserId', responseJson.data.id);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -4660,7 +4703,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Cache Test\",\n    \"email\": \"cache@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"user\"\n}",
+              "raw": "{\n    \"fullname\": \"Cache Test\",\n    \"email\": \"{{cacheUserEmail}}\",\n    \"password\": \"password123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4696,7 +4739,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"company_id\": \"{{jobCompanyId}}\",\n    \"category_id\": \"{{jobCategoryId}}\",\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Frontend position\",\n    \"job_type\": \"full-time\",\n    \"experience_level\": \"mid\",\n    \"location_type\": \"onsite\",\n    \"status\": \"open\"\n}",
+              "raw": "{\n    \"companyId\": \"{{jobCompanyId}}\",\n    \"categoryId\": \"{{jobCategoryId}}\",\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Frontend position\",\n    \"type\": \"full-time\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4732,7 +4775,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"user_id\": \"{{userId}}\",\n    \"job_id\": \"{{applicationJobId}}\",\n    \"status\": \"pending\"\n}",
+              "raw": "{\n    \"jobId\": \"{{applicationJobId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4749,9 +4792,7 @@
             {
               "listen": "test",
               "script": {
-                "exec": [
-                  ""
-                ],
+                "exec": [""],
                 "type": "text/javascript"
               }
             }
@@ -5054,7 +5095,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -5086,7 +5127,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -5256,7 +5297,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"company_id\": \"{{jobCompanyId}}\",\n    \"category_id\": \"{{jobCategoryId}}\",\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Frontend position\",\n    \"job_type\": \"full-time\",\n    \"experience_level\": \"mid\",\n    \"location_type\": \"onsite\",\n    \"status\": \"open\"\n}",
+              "raw": "{\n    \"companyId\": \"{{jobCompanyId}}\",\n    \"categoryId\": \"{{jobCategoryId}}\",\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Frontend position\",\n    \"type\": \"full-time\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5298,7 +5339,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"user_id\": \"{{userId}}\",\n    \"job_id\": \"{{applicationJobId}}\",\n    \"status\": \"pending\"\n}",
+              "raw": "{\n    \"jobId\": \"{{applicationJobId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5327,7 +5368,7 @@
                   "pm.test('New application appears in list', function() {",
                   "    const responseJson = pm.response.json();",
                   "    const newAppId = pm.environment.get('newApplicationId');",
-                  "    const hasNewApp = responseJson.data.applications.some(app => app.id === newAppId);",
+                  "    const hasNewApp = responseJson.data.items.some(app => app.id === newAppId);",
                   "    pm.expect(hasNewApp).to.be.true;",
                   "});"
                 ],
@@ -5368,7 +5409,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
+                "value": "Bearer {{ownerAccessToken}}",
                 "type": "text"
               }
             ],
@@ -5435,7 +5476,7 @@
               "script": {
                 "exec": [
                   "pm.test('Register owner - status 201 or 400 (already exists)', () => {",
-                  "    pm.expect([201, 400]).to.include(pm.response.code);",
+                  "    pm.expect([201, 400, 409]).to.include(pm.response.code);",
                   "});",
                   "const json = pm.response.json();",
                   "if (json.data && json.data.id) {",
@@ -5470,7 +5511,7 @@
               "script": {
                 "exec": [
                   "pm.test('Register applicant - status 201 or 400 (already exists)', () => {",
-                  "    pm.expect([201, 400]).to.include(pm.response.code);",
+                  "    pm.expect([201, 400, 409]).to.include(pm.response.code);",
                   "});",
                   "const json = pm.response.json();",
                   "if (json.data && json.data.id) {",
@@ -5738,7 +5779,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company_id\": \"{{mqCompanyId}}\",\n  \"category_id\": \"{{mqCategoryId}}\",\n  \"title\": \"RabbitMQ Test Job\",\n  \"description\": \"Testing RabbitMQ notification on application\",\n  \"job_type\": \"full-time\",\n  \"experience_level\": \"mid\",\n  \"location_type\": \"remote\",\n  \"location_city\": \"Jakarta\",\n  \"salary_min\": 5000000,\n  \"salary_max\": 10000000,\n  \"is_salary_visible\": true,\n  \"status\": \"open\"\n}"
+              "raw": "{\n  \"companyId\": \"{{mqCompanyId}}\",\n  \"categoryId\": \"{{mqCategoryId}}\",\n  \"title\": \"RabbitMQ Test Job\",\n  \"description\": \"Testing RabbitMQ notification on application\",\n  \"type\": \"full-time\",\n  \"location\": \"Jakarta\",\n  \"salary\": 5000000\n}"
             },
             "url": "{{baseURL}}/jobs"
           },
@@ -5764,8 +5805,8 @@
                   "    pm.expect(json.status).to.equal('success');",
                   "    pm.expect(json.data).to.be.an('object');",
                   "    pm.expect(json.data.id).to.be.a('string');",
-                  "    pm.expect(json.data.user_id).to.be.a('string');",
-                  "    pm.expect(json.data.job_id).to.be.a('string');",
+                  "    pm.expect(json.data.userId).to.be.a('string');",
+                  "    pm.expect(json.data.jobId).to.be.a('string');",
                   "    pm.expect(json.data.status).to.be.a('string');",
                   "    pm.environment.set('mqApplicationId', json.data.id);",
                   "});",
@@ -5798,7 +5839,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": \"{{applicantUserId}}\",\n  \"job_id\": \"{{mqJobId}}\",\n  \"status\": \"pending\"\n}"
+              "raw": "{\n  \"jobId\": \"{{mqJobId}}\"\n}"
             },
             "url": "{{baseURL}}/applications"
           },
@@ -5840,7 +5881,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": \"{{applicantUserId}}\",\n  \"job_id\": \"{{mqJobId}}\",\n  \"status\": \"pending\"\n}"
+              "raw": "{\n  \"jobId\": \"{{mqJobId}}\"\n}"
             },
             "url": "{{baseURL}}/applications"
           },
@@ -5862,8 +5903,8 @@
                   "    const appId = pm.environment.get('mqApplicationId');",
                   "    pm.expect(json.status).to.equal('success');",
                   "    pm.expect(json.data.id).to.equal(appId);",
-                  "    pm.expect(json.data.job_id).to.equal(pm.environment.get('mqJobId'));",
-                  "    pm.expect(json.data.user_id).to.equal(pm.environment.get('applicantUserId'));",
+                  "    pm.expect(json.data.jobId).to.equal(pm.environment.get('mqJobId'));",
+                  "    pm.expect(json.data.userId).to.equal(pm.environment.get('applicantUserId'));",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -5954,7 +5995,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": \"{{applicantUserId}}\",\n  \"job_id\": \"job-nonexistent-id-xxx\",\n  \"status\": \"pending\"\n}"
+              "raw": "{\n  \"jobId\": \"job-nonexistent-id-xxx\"\n}"
             },
             "url": "{{baseURL}}/applications"
           },
