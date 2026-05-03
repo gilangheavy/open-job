@@ -190,7 +190,12 @@ describe('DocumentsService', () => {
       const result = await service.findAll({ page: 1, limit: 10 });
 
       expect(result.items).toHaveLength(1);
-      expect(result.meta).toEqual({ total: 1, page: 1, limit: 10, totalPages: 1 });
+      expect(result.meta).toEqual({
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
       expect(result.items[0].presignedUrl).toBe(PRESIGNED_URL);
     });
   });

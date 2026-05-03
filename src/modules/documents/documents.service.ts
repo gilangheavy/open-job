@@ -83,7 +83,7 @@ export class DocumentsService {
     });
 
     const presignedUrl = await this.s3.getPresignedUrl(key);
-    return this.toResponse(doc as DocumentWithUser, presignedUrl);
+    return this.toResponse(doc, presignedUrl);
   }
 
   async findAll(
@@ -139,10 +139,8 @@ export class DocumentsService {
       throw new NotFoundException('Document not found');
     }
 
-    const presignedUrl = await this.s3.getPresignedUrl(
-      (doc as DocumentWithUser).url,
-    );
-    const response = this.toResponse(doc as DocumentWithUser, presignedUrl);
+    const presignedUrl = await this.s3.getPresignedUrl(doc.url);
+    const response = this.toResponse(doc, presignedUrl);
 
     await this.cache.set(cacheKey(uuid), response, CACHE_TTL);
     return { data: response, source: 'database' };
@@ -162,7 +160,7 @@ export class DocumentsService {
       throw new NotFoundException('Document not found');
     }
 
-    if ((doc as DocumentWithUser).user.uuid !== requesterUuid) {
+    if (doc.user.uuid !== requesterUuid) {
       throw new ForbiddenException(
         'You are not authorized to delete this document',
       );

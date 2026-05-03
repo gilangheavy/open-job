@@ -10,10 +10,15 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3Service } from './s3.service';
 
 const mockS3Send = jest.fn();
-const mockGetSignedUrl = getSignedUrl as jest.MockedFunction<typeof getSignedUrl>;
+const mockGetSignedUrl = getSignedUrl as jest.MockedFunction<
+  typeof getSignedUrl
+>;
 
 jest.mock('@aws-sdk/client-s3', () => {
-  const actual = jest.requireActual<typeof import('@aws-sdk/client-s3')>('@aws-sdk/client-s3');
+  const actual =
+    jest.requireActual<typeof import('@aws-sdk/client-s3')>(
+      '@aws-sdk/client-s3',
+    );
   return {
     ...actual,
     S3Client: jest.fn().mockImplementation(() => ({ send: mockS3Send })),
@@ -41,7 +46,9 @@ describe('S3Service', () => {
         S3Service,
         {
           provide: ConfigService,
-          useValue: { get: (key: string) => S3_CONFIG[key as keyof typeof S3_CONFIG] },
+          useValue: {
+            get: (key: string) => S3_CONFIG[key as keyof typeof S3_CONFIG],
+          },
         },
       ],
     }).compile();
@@ -59,7 +66,11 @@ describe('S3Service', () => {
       mockS3Send.mockResolvedValueOnce({});
 
       const buffer = Buffer.from('pdf-content');
-      const key = await service.uploadFile(buffer, 'documents/uuid/123-resume.pdf', 'application/pdf');
+      const key = await service.uploadFile(
+        buffer,
+        'documents/uuid/123-resume.pdf',
+        'application/pdf',
+      );
 
       expect(mockS3Send).toHaveBeenCalledTimes(1);
       expect(PutObjectCommand).toHaveBeenCalledWith({
@@ -102,10 +113,13 @@ describe('S3Service', () => {
   // -----------------------------------------------------------------------
   describe('getPresignedUrl()', () => {
     it('should return a presigned URL for the given key with TTL 3600', async () => {
-      const fakeUrl = 'https://minio/openjob/documents/uuid/123-resume.pdf?X-Amz-Signature=abc';
+      const fakeUrl =
+        'https://minio/openjob/documents/uuid/123-resume.pdf?X-Amz-Signature=abc';
       mockGetSignedUrl.mockResolvedValueOnce(fakeUrl);
 
-      const url = await service.getPresignedUrl('documents/uuid/123-resume.pdf');
+      const url = await service.getPresignedUrl(
+        'documents/uuid/123-resume.pdf',
+      );
 
       expect(mockGetSignedUrl).toHaveBeenCalledTimes(1);
       expect(GetObjectCommand).toHaveBeenCalledWith({
