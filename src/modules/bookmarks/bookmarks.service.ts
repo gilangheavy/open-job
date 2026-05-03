@@ -91,6 +91,7 @@ export class BookmarksService {
 
   async findByUuid(
     uuid: string,
+    jobUuid: string,
     requesterUuid: string,
   ): Promise<BookmarkResponseDto> {
     if (!UUID_REGEX.test(uuid)) {
@@ -103,6 +104,10 @@ export class BookmarksService {
     });
 
     if (!bookmark) {
+      throw new NotFoundException('Bookmark not found');
+    }
+
+    if (bookmark.job.uuid !== jobUuid) {
       throw new NotFoundException('Bookmark not found');
     }
 

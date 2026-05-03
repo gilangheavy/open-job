@@ -275,7 +275,7 @@ describe('BookmarksController (e2e)', () => {
       expect(res.body.status).toBe('fail');
     });
 
-    it('should return 403 when another user tries to delete (AC: non-owner delete returns 403)', async () => {
+    it('should return 404 when another user tries to delete a bookmark they do not own (no information disclosure)', async () => {
       const { applicantToken, jobId } = await setupUserWithJob(app);
       const { token: anotherToken } = await registerAndLogin(app);
 
@@ -291,7 +291,7 @@ describe('BookmarksController (e2e)', () => {
         .set('Authorization', `Bearer ${anotherToken}`)
         .expect(404);
 
-      // another user gets 404 (no bookmark for them), not 403
+      // another user gets 404 (no bookmark for them), no info disclosure
       expect(res.body.status).toBe('fail');
     });
 
@@ -326,6 +326,26 @@ describe('BookmarksController (e2e)', () => {
       expect(res.body.status).toBe('success');
       expect(res.body.data.id).toBe(bookmarkId);
       expect(res.body.data.jobId).toBe(jobId);
+    });
+
+    it('should return 404 when bookmarkId does not belong to the given jobId', async () => {
+      const { applicantToken, jobId } = await setupUserWithJob(app);
+      const { jobId: otherJobId } = await setupUserWithJob(app);
+
+      const createRes = await request(app.getHttpServer())
+        .post(`/api/v1/jobs/${jobId}/bookmark`)
+        .set('Authorization', `Bearer ${applicantToken}`)
+        .expect(201);
+
+      const bookmarkId = createRes.body.data.id as string;
+
+      // access bookmark under a different jobId — must be 404, not 403
+      const res = await request(app.getHttpServer())
+        .get(`/api/v1/jobs/${otherJobId}/bookmark/${bookmarkId}`)
+        .set('Authorization', `Bearer ${applicantToken}`)
+        .expect(404);
+
+      expect(res.body.status).toBe('fail');
     });
 
     it('should return 403 when another user tries to access the bookmark', async () => {

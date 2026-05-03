@@ -52,10 +52,10 @@ export class BookmarksController {
   @UseGuards(JwtAuthGuard)
   findOne(
     @CurrentUser() user: JwtPayload,
-    @Param('jobId') _jobId: string,
+    @Param('jobId') jobId: string,
     @Param('id') id: string,
   ): Promise<BookmarkResponseDto> {
-    return this.bookmarksService.findByUuid(id, user.id);
+    return this.bookmarksService.findByUuid(id, jobId, user.id);
   }
 
   @Get('bookmarks')

@@ -244,16 +244,24 @@ describe('BookmarksService', () => {
     it('should return bookmark response when found and user matches', async () => {
       prisma.client.bookmark.findUnique.mockResolvedValue(mockBookmark);
 
-      const result = await service.findByUuid(BOOKMARK_UUID, USER_UUID);
+      const result = await service.findByUuid(BOOKMARK_UUID, JOB_UUID, USER_UUID);
 
       expect(result).toEqual(mockBookmarkResponse);
+    });
+
+    it('should throw NotFoundException when jobId does not match bookmark job', async () => {
+      prisma.client.bookmark.findUnique.mockResolvedValue(mockBookmark);
+
+      await expect(
+        service.findByUuid(BOOKMARK_UUID, OTHER_UUID, USER_UUID),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when requester is not the bookmark owner', async () => {
       prisma.client.bookmark.findUnique.mockResolvedValue(mockBookmark);
 
       await expect(
-        service.findByUuid(BOOKMARK_UUID, OTHER_UUID),
+        service.findByUuid(BOOKMARK_UUID, JOB_UUID, OTHER_UUID),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -261,13 +269,13 @@ describe('BookmarksService', () => {
       prisma.client.bookmark.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.findByUuid(BOOKMARK_UUID, USER_UUID),
+        service.findByUuid(BOOKMARK_UUID, JOB_UUID, USER_UUID),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException for invalid UUID format', async () => {
       await expect(
-        service.findByUuid('not-a-uuid', USER_UUID),
+        service.findByUuid('not-a-uuid', JOB_UUID, USER_UUID),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.client.bookmark.findUnique).not.toHaveBeenCalled();
     });
