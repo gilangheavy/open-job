@@ -21,10 +21,10 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     try {
-      const host = this.config.get('RABBITMQ_HOST');
-      const port = this.config.get('RABBITMQ_PORT');
-      const user = this.config.get('RABBITMQ_USER');
-      const password = this.config.get('RABBITMQ_PASSWORD');
+      const host: string = this.config.get('RABBITMQ_HOST');
+      const port: number = this.config.get('RABBITMQ_PORT');
+      const user: string = this.config.get('RABBITMQ_USER');
+      const password: string = this.config.get('RABBITMQ_PASSWORD');
 
       this.connection = await amqplib.connect(
         `amqp://${user}:${password}@${host}:${port}`,

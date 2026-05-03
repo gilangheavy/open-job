@@ -180,7 +180,10 @@ describe('ApplicationsService', () => {
       expect(prisma.client.application.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ status: 'pending' }),
-          include: { user: true, job: { include: { company: { include: { owner: true } } } } },
+          include: {
+            user: true,
+            job: { include: { company: { include: { owner: true } } } },
+          },
         }),
       );
       expect(result).toEqual(mockApplicationResponse);
@@ -208,9 +211,7 @@ describe('ApplicationsService', () => {
       expect(cache.del).toHaveBeenCalledWith(
         `applications:user:${APPLICANT_UUID}`,
       );
-      expect(cache.del).toHaveBeenCalledWith(
-        `applications:job:${JOB_UUID}`,
-      );
+      expect(cache.del).toHaveBeenCalledWith(`applications:job:${JOB_UUID}`);
     });
 
     it('should throw NotFoundException when job does not exist', async () => {
@@ -224,7 +225,10 @@ describe('ApplicationsService', () => {
     it('should throw ForbiddenException when applicant owns the company', async () => {
       const ownersJob = {
         ...mockJob,
-        company: { ...mockCompany, owner: { ...mockOwner, uuid: APPLICANT_UUID } },
+        company: {
+          ...mockCompany,
+          owner: { ...mockOwner, uuid: APPLICANT_UUID },
+        },
       };
       prisma.client.job.findUnique.mockResolvedValue(ownersJob);
 
@@ -294,10 +298,7 @@ describe('ApplicationsService', () => {
     it('should return cached application if present in Redis', async () => {
       cache.get.mockResolvedValue(mockApplicationResponse);
 
-      const result = await service.findByUuid(
-        APPLICATION_UUID,
-        APPLICANT_UUID,
-      );
+      const result = await service.findByUuid(APPLICATION_UUID, APPLICANT_UUID);
 
       expect(cache.get).toHaveBeenCalledWith(
         `applications:${APPLICATION_UUID}`,
@@ -311,10 +312,7 @@ describe('ApplicationsService', () => {
       cache.get.mockResolvedValue(null);
       prisma.client.application.findUnique.mockResolvedValue(mockApplication);
 
-      const result = await service.findByUuid(
-        APPLICATION_UUID,
-        APPLICANT_UUID,
-      );
+      const result = await service.findByUuid(APPLICATION_UUID, APPLICANT_UUID);
 
       expect(cache.set).toHaveBeenCalledWith(
         `applications:${APPLICATION_UUID}`,
@@ -364,14 +362,16 @@ describe('ApplicationsService', () => {
   // -----------------------------------------------------------------------
   describe('findByUser()', () => {
     it('should return cached user applications from Redis', async () => {
-      const cachedList = { items: [mockApplicationResponse], meta: { total: 1, page: 1, limit: 10, totalPages: 1 } };
+      const cachedList = {
+        items: [mockApplicationResponse],
+        meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+      };
       cache.get.mockResolvedValue(cachedList);
 
-      const result = await service.findByUser(
-        APPLICANT_UUID,
-        APPLICANT_UUID,
-        { page: 1, limit: 10 },
-      );
+      const result = await service.findByUser(APPLICANT_UUID, APPLICANT_UUID, {
+        page: 1,
+        limit: 10,
+      });
 
       expect(cache.get).toHaveBeenCalledWith(
         `applications:user:${APPLICANT_UUID}`,
@@ -385,11 +385,10 @@ describe('ApplicationsService', () => {
       prisma.client.application.findMany.mockResolvedValue([mockApplication]);
       prisma.client.application.count.mockResolvedValue(1);
 
-      const result = await service.findByUser(
-        APPLICANT_UUID,
-        APPLICANT_UUID,
-        { page: 1, limit: 10 },
-      );
+      const result = await service.findByUser(APPLICANT_UUID, APPLICANT_UUID, {
+        page: 1,
+        limit: 10,
+      });
 
       expect(cache.set).toHaveBeenCalledWith(
         `applications:user:${APPLICANT_UUID}`,
@@ -410,7 +409,10 @@ describe('ApplicationsService', () => {
       prisma.client.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.findByUser(APPLICANT_UUID, APPLICANT_UUID, { page: 1, limit: 10 }),
+        service.findByUser(APPLICANT_UUID, APPLICANT_UUID, {
+          page: 1,
+          limit: 10,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -426,14 +428,16 @@ describe('ApplicationsService', () => {
   // -----------------------------------------------------------------------
   describe('findByJob()', () => {
     it('should return cached job applications from Redis', async () => {
-      const cachedList = { items: [mockApplicationResponse], meta: { total: 1, page: 1, limit: 10, totalPages: 1 } };
+      const cachedList = {
+        items: [mockApplicationResponse],
+        meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+      };
       cache.get.mockResolvedValue(cachedList);
 
-      const result = await service.findByJob(
-        JOB_UUID,
-        OWNER_UUID,
-        { page: 1, limit: 10 },
-      );
+      const result = await service.findByJob(JOB_UUID, OWNER_UUID, {
+        page: 1,
+        limit: 10,
+      });
 
       expect(cache.get).toHaveBeenCalledWith(`applications:job:${JOB_UUID}`);
       expect(result).toEqual(cachedList);
@@ -445,11 +449,10 @@ describe('ApplicationsService', () => {
       prisma.client.application.findMany.mockResolvedValue([mockApplication]);
       prisma.client.application.count.mockResolvedValue(1);
 
-      const result = await service.findByJob(
-        JOB_UUID,
-        OWNER_UUID,
-        { page: 1, limit: 10 },
-      );
+      const result = await service.findByJob(JOB_UUID, OWNER_UUID, {
+        page: 1,
+        limit: 10,
+      });
 
       expect(cache.set).toHaveBeenCalledWith(
         `applications:job:${JOB_UUID}`,
@@ -598,9 +601,7 @@ describe('ApplicationsService', () => {
       expect(cache.del).toHaveBeenCalledWith(
         `applications:user:${APPLICANT_UUID}`,
       );
-      expect(cache.del).toHaveBeenCalledWith(
-        `applications:job:${JOB_UUID}`,
-      );
+      expect(cache.del).toHaveBeenCalledWith(`applications:job:${JOB_UUID}`);
     });
   });
 

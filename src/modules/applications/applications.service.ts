@@ -82,9 +82,7 @@ export class ApplicationsService {
     });
 
     if (existing) {
-      throw new ConflictException(
-        'You have already applied to this job',
-      );
+      throw new ConflictException('You have already applied to this job');
     }
 
     let application: ApplicationWithRelations;
@@ -99,7 +97,7 @@ export class ApplicationsService {
           user: true,
           job: { include: { company: { include: { owner: true } } } },
         },
-      }) as ApplicationWithRelations;
+      });
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -164,27 +162,25 @@ export class ApplicationsService {
       throw new NotFoundException('Application not found');
     }
 
-    const cached =
-      await this.cache.get<ApplicationResponseDto>(cacheKey(uuid));
+    const cached = await this.cache.get<ApplicationResponseDto>(cacheKey(uuid));
     if (cached) {
       this.assertCanRead(cached, requesterUuid);
       return { data: cached, source: 'cache' };
     }
 
-    const application =
-      await this.prisma.client.application.findUnique({
-        where: { uuid },
-        include: {
-          user: true,
-          job: { include: { company: { include: { owner: true } } } },
-        },
-      });
+    const application = await this.prisma.client.application.findUnique({
+      where: { uuid },
+      include: {
+        user: true,
+        job: { include: { company: { include: { owner: true } } } },
+      },
+    });
 
     if (!application) {
       throw new NotFoundException('Application not found');
     }
 
-    const app = application as ApplicationWithRelations;
+    const app = application;
     this.assertCanReadFull(app, requesterUuid);
 
     const response = this.toResponse(app);
@@ -202,15 +198,12 @@ export class ApplicationsService {
     }
 
     if (targetUserUuid !== requesterUuid) {
-      throw new ForbiddenException(
-        'You can only view your own applications',
-      );
+      throw new ForbiddenException('You can only view your own applications');
     }
 
-    const cached =
-      await this.cache.get<PaginatedResult<ApplicationResponseDto>>(
-        userCacheKey(targetUserUuid),
-      );
+    const cached = await this.cache.get<
+      PaginatedResult<ApplicationResponseDto>
+    >(userCacheKey(targetUserUuid));
     if (cached) return cached;
 
     const user = await this.prisma.client.user.findUnique({
@@ -264,10 +257,9 @@ export class ApplicationsService {
       throw new NotFoundException('Job not found');
     }
 
-    const cached =
-      await this.cache.get<PaginatedResult<ApplicationResponseDto>>(
-        jobCacheKey(jobUuid),
-      );
+    const cached = await this.cache.get<
+      PaginatedResult<ApplicationResponseDto>
+    >(jobCacheKey(jobUuid));
     if (cached) return cached;
 
     const job = await this.prisma.client.job.findUnique({
@@ -278,7 +270,7 @@ export class ApplicationsService {
       throw new NotFoundException('Job not found');
     }
 
-    const jobWithCompany = job as JobWithCompany;
+    const jobWithCompany = job;
     if (jobWithCompany.company.owner.uuid !== requesterUuid) {
       throw new ForbiddenException(
         'Only the company owner can view job applications',
@@ -327,7 +319,7 @@ export class ApplicationsService {
   ): Promise<void> {
     const application = await this.findApplicationOrFail(uuid);
 
-    const jobWithCompany = application.job as JobWithCompany;
+    const jobWithCompany = application.job;
     if (jobWithCompany.company.owner.uuid !== requesterUuid) {
       throw new ForbiddenException(
         'Only the company owner can update application status',
@@ -393,7 +385,7 @@ export class ApplicationsService {
       throw new NotFoundException('Job not found');
     }
 
-    return job as JobWithCompany;
+    return job;
   }
 
   private async findApplicationOrFail(
@@ -403,20 +395,19 @@ export class ApplicationsService {
       throw new NotFoundException('Application not found');
     }
 
-    const application =
-      await this.prisma.client.application.findUnique({
-        where: { uuid },
-        include: {
-          user: true,
-          job: { include: { company: { include: { owner: true } } } },
-        },
-      });
+    const application = await this.prisma.client.application.findUnique({
+      where: { uuid },
+      include: {
+        user: true,
+        job: { include: { company: { include: { owner: true } } } },
+      },
+    });
 
     if (!application) {
       throw new NotFoundException('Application not found');
     }
 
-    return application as ApplicationWithRelations;
+    return application;
   }
 
   /** Check read permission using the lightweight response DTO (from cache). */
@@ -440,8 +431,7 @@ export class ApplicationsService {
     requesterUuid: string,
   ): void {
     const isApplicant = application.user.uuid === requesterUuid;
-    const isCompanyOwner =
-      application.job.company.owner.uuid === requesterUuid;
+    const isCompanyOwner = application.job.company.owner.uuid === requesterUuid;
 
     if (!isApplicant && !isCompanyOwner) {
       throw new ForbiddenException(

@@ -93,7 +93,10 @@ export class ApplicationsController {
     @Body() dto: UpdateApplicationStatusDto,
   ): Promise<{ status: string; message: string }> {
     await this.applicationsService.updateStatus(uuid, user.id, dto);
-    return { status: 'success', message: 'Application status updated successfully' };
+    return {
+      status: 'success',
+      message: 'Application status updated successfully',
+    };
   }
 
   @Delete(':uuid')

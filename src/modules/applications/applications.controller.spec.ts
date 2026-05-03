@@ -171,9 +171,7 @@ describe('ApplicationsController', () => {
     });
 
     it('should propagate ForbiddenException', async () => {
-      service.findByUuid.mockRejectedValue(
-        new ForbiddenException('No access'),
-      );
+      service.findByUuid.mockRejectedValue(new ForbiddenException('No access'));
 
       await expect(
         controller.getById(APPLICATION_UUID, mockApplicantUser, mockRes),
@@ -203,12 +201,13 @@ describe('ApplicationsController', () => {
     });
 
     it('should propagate ForbiddenException when accessing other user applications', async () => {
-      service.findByUser.mockRejectedValue(
-        new ForbiddenException('Self only'),
-      );
+      service.findByUser.mockRejectedValue(new ForbiddenException('Self only'));
 
       await expect(
-        controller.getByUser(APPLICANT_UUID, mockOwnerUser, { page: 1, limit: 10 }),
+        controller.getByUser(APPLICANT_UUID, mockOwnerUser, {
+          page: 1,
+          limit: 10,
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -220,17 +219,15 @@ describe('ApplicationsController', () => {
     it('should return applications for a job', async () => {
       service.findByJob.mockResolvedValue(mockPaginatedResult);
 
-      const result = await controller.getByJob(
-        JOB_UUID,
-        mockOwnerUser,
-        { page: 1, limit: 10 },
-      );
+      const result = await controller.getByJob(JOB_UUID, mockOwnerUser, {
+        page: 1,
+        limit: 10,
+      });
 
-      expect(service.findByJob).toHaveBeenCalledWith(
-        JOB_UUID,
-        OWNER_UUID,
-        { page: 1, limit: 10 },
-      );
+      expect(service.findByJob).toHaveBeenCalledWith(JOB_UUID, OWNER_UUID, {
+        page: 1,
+        limit: 10,
+      });
       expect(result).toEqual(mockPaginatedResult);
     });
 
@@ -240,7 +237,10 @@ describe('ApplicationsController', () => {
       );
 
       await expect(
-        controller.getByJob(JOB_UUID, mockApplicantUser, { page: 1, limit: 10 }),
+        controller.getByJob(JOB_UUID, mockApplicantUser, {
+          page: 1,
+          limit: 10,
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
   });

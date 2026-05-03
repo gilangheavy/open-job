@@ -111,7 +111,11 @@ describe('ApplicationsController (e2e)', () => {
       })
       // Mock QueueService to avoid real RabbitMQ connections in e2e tests
       .overrideProvider(QueueService)
-      .useValue({ publish: jest.fn(), onModuleInit: jest.fn(), onModuleDestroy: jest.fn() })
+      .useValue({
+        publish: jest.fn(),
+        onModuleInit: jest.fn(),
+        onModuleDestroy: jest.fn(),
+      })
       .compile();
 
     app = moduleFixture.createNestApplication();
