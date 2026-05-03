@@ -233,9 +233,9 @@ export class ApplicationsService {
     }
 
     const { page, limit } = query;
-    const cached = await this.cache.get<PaginatedResult<ApplicationResponseDto>>(
-      userCacheKey(targetUserUuid, page, limit),
-    );
+    const cached = await this.cache.get<
+      PaginatedResult<ApplicationResponseDto>
+    >(userCacheKey(targetUserUuid, page, limit));
     if (cached) return { data: cached, source: 'cache' };
 
     const user = await this.prisma.client.user.findUnique({
@@ -308,9 +308,9 @@ export class ApplicationsService {
     }
 
     const { page, limit } = query;
-    const cached = await this.cache.get<PaginatedResult<ApplicationResponseDto>>(
-      jobCacheKey(jobUuid, page, limit),
-    );
+    const cached = await this.cache.get<
+      PaginatedResult<ApplicationResponseDto>
+    >(jobCacheKey(jobUuid, page, limit));
     if (cached) return { data: cached, source: 'cache' };
     const skip = (page - 1) * limit;
 
@@ -342,11 +342,7 @@ export class ApplicationsService {
       },
     };
 
-    await this.cache.set(
-      jobCacheKey(jobUuid, page, limit),
-      result,
-      CACHE_TTL,
-    );
+    await this.cache.set(jobCacheKey(jobUuid, page, limit), result, CACHE_TTL);
     return { data: result, source: 'database' };
   }
 

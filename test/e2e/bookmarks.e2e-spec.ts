@@ -210,8 +210,7 @@ describe('BookmarksController (e2e)', () => {
     });
 
     it('should return 404 when job is soft-deleted (AC: soft-deleted job)', async () => {
-      const { ownerToken, applicantToken, jobId } =
-        await setupUserWithJob(app);
+      const { ownerToken, applicantToken, jobId } = await setupUserWithJob(app);
 
       // Soft-delete the job
       await request(app.getHttpServer())
