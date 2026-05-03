@@ -35,9 +35,11 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const mailPort = this.config.get('MAIL_PORT');
     this.transporter = nodemailer.createTransport({
       host: this.config.get('MAIL_HOST'),
-      port: this.config.get('MAIL_PORT'),
+      port: mailPort,
+      secure: mailPort === 465, // SSL for port 465, STARTTLS for 587
       auth: {
         user: this.config.get('MAIL_USER'),
         pass: this.config.get('MAIL_PASSWORD'),
