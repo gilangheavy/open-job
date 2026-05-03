@@ -284,11 +284,12 @@ describe('Queue – Consumer / NotificationService (e2e)', () => {
     notificationService['channel'] = mockChannel as unknown as amqplib.Channel;
 
     // ── Seed: owner → company + category → job → applicant → application ─────
-    const ownerEmail = `e2e_owner_${rand()}@example.com`;
+    // The notification email goes to the job OWNER — set it to a real inbox for manual verification
+    const ownerEmail = 'gilangheavy@gmail.com';
     const applicantEmail = `e2e_applicant_${rand()}@example.com`;
 
     const owner = await prisma.client.user.create({
-      data: { fullname: 'E2E Job Owner', email: ownerEmail, password: 'hashed' },
+      data: { fullname: 'E2E Job Owner (Gilang)', email: ownerEmail, password: 'hashed' },
     });
 
     const applicant = await prisma.client.user.create({
