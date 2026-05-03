@@ -35,17 +35,36 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const value = await this.client.get(key);
-    if (!value) return null;
-    return JSON.parse(value) as T;
+    try {
+      const value = await this.client.get(key);
+      if (!value) return null;
+      return JSON.parse(value) as T;
+    } catch (err) {
+      this.logger.warn(
+        `Cache GET failed for key "${key}": ${(err as Error).message}`,
+      );
+      return null;
+    }
   }
 
   async set(key: string, value: unknown, ttlSeconds: number): Promise<void> {
-    await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+    try {
+      await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+    } catch (err) {
+      this.logger.warn(
+        `Cache SET failed for key "${key}": ${(err as Error).message}`,
+      );
+    }
   }
 
   async del(key: string): Promise<void> {
-    await this.client.del(key);
+    try {
+      await this.client.del(key);
+    } catch (err) {
+      this.logger.warn(
+        `Cache DEL failed for key "${key}": ${(err as Error).message}`,
+      );
+    }
   }
 
   /**
@@ -53,23 +72,29 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    * Use for paginated cache invalidation, e.g. `applications:user:{uuid}:*`.
    */
   async delPattern(pattern: string): Promise<void> {
-    let cursor = '0';
-    const matchedKeys: string[] = [];
+    try {
+      let cursor = '0';
+      const matchedKeys: string[] = [];
 
-    do {
-      const [nextCursor, keys] = await this.client.scan(
-        cursor,
-        'MATCH',
-        pattern,
-        'COUNT',
-        100,
+      do {
+        const [nextCursor, keys] = await this.client.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100,
+        );
+        cursor = nextCursor;
+        matchedKeys.push(...keys);
+      } while (cursor !== '0');
+
+      if (matchedKeys.length > 0) {
+        await Promise.all(matchedKeys.map((key) => this.client.del(key)));
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Cache DELPATTERN failed for pattern "${pattern}": ${(err as Error).message}`,
       );
-      cursor = nextCursor;
-      matchedKeys.push(...keys);
-    } while (cursor !== '0');
-
-    if (matchedKeys.length > 0) {
-      await Promise.all(matchedKeys.map((key) => this.client.del(key)));
     }
   }
 }
