@@ -97,23 +97,44 @@ _(Ensure you also fill in the Database URL, Redis, RabbitMQ, and S3 credentials)
 
 ### 3. Spin Up Infrastructure
 
-Start the required backing services using Docker Compose:
+The `infrastructure/` directory contains the Docker Compose file and its own
+`.env.example` for service-level credentials. Copy and fill it in:
 
 ```bash
-docker-compose up -d
+cp infrastructure/.env.example infrastructure/.env
+# Edit infrastructure/.env and set strong passwords for POSTGRES, RabbitMQ, MinIO
 ```
+
+Then start all backing services:
+
+```bash
+docker-compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env up -d
+```
+
+| Service        | URL / Port               |
+| -------------- | ------------------------ |
+| PostgreSQL     | `localhost:5432`         |
+| Redis          | `localhost:6379`         |
+| RabbitMQ AMQP  | `localhost:5672`         |
+| RabbitMQ UI    | <http://localhost:15672> |
+| MinIO S3 API   | `localhost:9000`         |
+| MinIO Console  | <http://localhost:9001>  |
+| MailHog SMTP   | `localhost:1025`         |
+| MailHog Web UI | <http://localhost:8025>  |
 
 ### 4. Install Dependencies & Run Migrations
 
 ```bash
 npm install
-npx prisma migrate dev
+npm run prisma:migrate:dev
+# Optional: seed the database with initial data
+npm run prisma:seed
 ```
 
 ### 5. Start the Application
 
 ```bash
-# Development mode
+# Development mode (hot-reload)
 npm run start:dev
 
 # Production mode
@@ -121,18 +142,25 @@ npm run build
 npm run start:prod
 ```
 
+The API will be available at `http://localhost:5000/api/v1`.
+Interactive documentation (Swagger UI) is served at `http://localhost:5000/api/v1/docs`.
+
 ---
 
 ## 🧪 Testing
 
-This API is fully compliant with the rigorous Postman Testing Collections.
-
 ```bash
-# Run unit tests
+# Unit tests
 npm run test
 
-# Run e2e tests
+# Unit tests with coverage
+npm run test:cov
+
+# End-to-end tests
 npm run test:e2e
+
+# Postman / Newman integration tests
+npm run test:newman
 ```
 
 ---
