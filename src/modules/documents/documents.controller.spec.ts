@@ -93,9 +93,9 @@ describe('DocumentsController', () => {
         new BadRequestException('Invalid file type'),
       );
 
-      await expect(controller.upload(mockUser, makeMulterFile())).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        controller.upload(mockUser, makeMulterFile()),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should propagate BadRequestException for file too large', async () => {
@@ -103,9 +103,9 @@ describe('DocumentsController', () => {
         new BadRequestException('File size exceeds'),
       );
 
-      await expect(controller.upload(mockUser, makeMulterFile())).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        controller.upload(mockUser, makeMulterFile()),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

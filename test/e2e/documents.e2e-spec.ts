@@ -44,7 +44,9 @@ describe('DocumentsController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let cache: CacheService;
-  let mockS3: jest.Mocked<Pick<S3Service, 'uploadFile' | 'deleteFile' | 'getPresignedUrl'>>;
+  let mockS3: jest.Mocked<
+    Pick<S3Service, 'uploadFile' | 'deleteFile' | 'getPresignedUrl'>
+  >;
 
   beforeAll(async () => {
     mockS3 = {
