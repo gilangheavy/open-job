@@ -42,17 +42,6 @@ export class BookmarksService {
   ): Promise<BookmarkResponseDto> {
     const job = await this.findJobOrFail(jobUuid);
 
-    const existing = await this.prisma.client.bookmark.findFirst({
-      where: {
-        user: { uuid: userUuid },
-        job: { id: job.id },
-      },
-    });
-
-    if (existing) {
-      throw new ConflictException('You have already bookmarked this job');
-    }
-
     let bookmark: BookmarkWithRelations;
     try {
       bookmark = await this.prisma.client.bookmark.create({

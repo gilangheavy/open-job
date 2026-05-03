@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookmarksService } from './bookmarks.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -123,7 +124,6 @@ describe('BookmarksService', () => {
   describe('create()', () => {
     it('should create a bookmark and return BookmarkResponseDto', async () => {
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
-      prisma.client.bookmark.findFirst.mockResolvedValue(null);
       prisma.client.bookmark.create.mockResolvedValue(mockBookmark);
 
       const result = await service.create(USER_UUID, JOB_UUID);
@@ -142,7 +142,6 @@ describe('BookmarksService', () => {
 
     it('should invalidate user bookmarks cache after creation', async () => {
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
-      prisma.client.bookmark.findFirst.mockResolvedValue(null);
       prisma.client.bookmark.create.mockResolvedValue(mockBookmark);
 
       await service.create(USER_UUID, JOB_UUID);
@@ -169,9 +168,13 @@ describe('BookmarksService', () => {
       );
     });
 
-    it('should throw ConflictException when bookmark already exists', async () => {
+    it('should throw ConflictException on unique constraint violation (P2002)', async () => {
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
-      prisma.client.bookmark.findFirst.mockResolvedValue(mockBookmark);
+      const p2002 = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed',
+        { code: 'P2002', clientVersion: '5.0.0' },
+      );
+      prisma.client.bookmark.create.mockRejectedValue(p2002);
 
       await expect(service.create(USER_UUID, JOB_UUID)).rejects.toThrow(
         ConflictException,
@@ -187,7 +190,6 @@ describe('BookmarksService', () => {
 
     it('should not expose integer id in response', async () => {
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
-      prisma.client.bookmark.findFirst.mockResolvedValue(null);
       prisma.client.bookmark.create.mockResolvedValue(mockBookmark);
 
       const result = await service.create(USER_UUID, JOB_UUID);
