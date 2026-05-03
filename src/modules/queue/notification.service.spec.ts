@@ -72,13 +72,16 @@ describe('NotificationService', () => {
 
   beforeEach(async () => {
     mockChannel = {
+      assertExchange: jest.fn().mockResolvedValue(undefined),
       assertQueue: jest.fn().mockResolvedValue(undefined),
+      bindQueue: jest.fn().mockResolvedValue(undefined),
       consume: jest.fn().mockResolvedValue(undefined),
       ack: jest.fn(),
       nack: jest.fn(),
       publish: jest.fn().mockReturnValue(true),
       close: jest.fn().mockResolvedValue(undefined),
       prefetch: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(),
     } as unknown as jest.Mocked<amqplib.Channel>;
 
     mockConnection = {

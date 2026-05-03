@@ -13,6 +13,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 const EXCHANGE_NAME = 'openjob.events';
 const QUEUE_NAME = 'application.created';
+const DLQ_NAME = 'application.created.dlq';
 const MAX_RETRIES = 3;
 
 type CompanyWithOwner = Company & { owner: User };
@@ -57,8 +58,28 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
       );
       this.channel = await this.connection.createChannel();
 
+      // Prevent unhandled 'error' events from crashing the process
+      this.channel.on('error', (err: Error) => {
+        this.logger.error(`Consumer channel error: ${err.message}`);
+      });
+
       // Process one message at a time
       await this.channel.prefetch(1);
+
+      // Assert full topology so the queue exists even when this consumer
+      // starts before QueueService (e.g. in a fresh CI environment)
+      await this.channel.assertExchange(EXCHANGE_NAME, 'direct', {
+        durable: true,
+      });
+      await this.channel.assertQueue(DLQ_NAME, { durable: true });
+      await this.channel.assertQueue(QUEUE_NAME, {
+        durable: true,
+        arguments: {
+          'x-dead-letter-exchange': '',
+          'x-dead-letter-routing-key': DLQ_NAME,
+        },
+      });
+      await this.channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, QUEUE_NAME);
 
       await this.channel.consume(QUEUE_NAME, (msg) => {
         if (msg) {
