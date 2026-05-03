@@ -406,10 +406,10 @@ describe('JobsController (e2e)', () => {
       expect(second.body.data.id).toBe(uuid);
     });
 
-    it('should return 404 for invalid UUID format', async () => {
+    it('should return 400 for invalid UUID format', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/jobs/not-a-uuid')
-        .expect(404);
+        .expect(400);
     });
 
     it('should return 404 for soft-deleted job', async () => {
@@ -470,10 +470,10 @@ describe('JobsController (e2e)', () => {
         .expect(404);
     });
 
-    it('should return 404 for invalid company UUID format', async () => {
+    it('should return 400 for invalid company UUID format', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/jobs/company/not-a-uuid')
-        .expect(404);
+        .expect(400);
     });
   });
 
@@ -511,10 +511,10 @@ describe('JobsController (e2e)', () => {
         .expect(404);
     });
 
-    it('should return 404 for invalid category UUID format', async () => {
+    it('should return 400 for invalid category UUID format', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/jobs/category/not-a-uuid')
-        .expect(404);
+        .expect(400);
     });
   });
 
