@@ -52,8 +52,16 @@ export class CategoriesController {
   @Get(':uuid')
   @ApiOperation({ summary: 'Get a category by UUID' })
   @ApiParam({ name: 'uuid', description: 'Category UUID' })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'Category found', type: CategoryResponseDto })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Category found',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async getById(
     @Param('uuid') uuid: string,
@@ -69,7 +77,11 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Create a new category (admin)' })
-  @ApiResponse({ status: 201, description: 'Category created', type: CategoryResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Category created',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
     return this.categoriesService.create(dto);

@@ -42,7 +42,11 @@ export class BookmarksController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Bookmark a job' })
   @ApiParam({ name: 'jobId', description: 'Job UUID' })
-  @ApiResponse({ status: 201, description: 'Job bookmarked', type: BookmarkResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Job bookmarked',
+    type: BookmarkResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @CurrentUser() user: JwtPayload,
@@ -72,7 +76,11 @@ export class BookmarksController {
   @ApiOperation({ summary: 'Get a specific bookmark by UUID' })
   @ApiParam({ name: 'jobId', description: 'Job UUID' })
   @ApiParam({ name: 'id', description: 'Bookmark UUID' })
-  @ApiResponse({ status: 200, description: 'Bookmark found', type: BookmarkResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookmark found',
+    type: BookmarkResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Bookmark not found' })
   findOne(
     @CurrentUser() user: JwtPayload,
@@ -84,10 +92,16 @@ export class BookmarksController {
 
   @Get('bookmarks')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'List all bookmarks for the current user (paginated)' })
+  @ApiOperation({
+    summary: 'List all bookmarks for the current user (paginated)',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
   @ApiResponse({ status: 200, description: 'Paginated list of bookmarks' })
   async getAll(
     @CurrentUser() user: JwtPayload,

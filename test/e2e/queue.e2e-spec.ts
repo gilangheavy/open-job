@@ -29,7 +29,10 @@ async function registerAndLogin(
   app: INestApplication<App>,
 ): Promise<{ token: string; email: string; password: string }> {
   const user = makeUser();
-  await request(app.getHttpServer()).post('/api/v1/users').send(user).expect(201);
+  await request(app.getHttpServer())
+    .post('/api/v1/users')
+    .send(user)
+    .expect(201);
 
   const res = await request(app.getHttpServer())
     .post('/api/v1/authentications')
@@ -52,7 +55,11 @@ async function setupOwnerWithJob(app: INestApplication<App>): Promise<{
   const companyRes = await request(app.getHttpServer())
     .post('/api/v1/companies')
     .set('Authorization', `Bearer ${ownerToken}`)
-    .send({ name: `Company ${rand()}`, description: 'Test', location: 'Jakarta' })
+    .send({
+      name: `Company ${rand()}`,
+      description: 'Test',
+      location: 'Jakarta',
+    })
     .expect(201);
 
   const categoryRes = await request(app.getHttpServer())
@@ -118,7 +125,11 @@ describe('Queue – Producer (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     app.useGlobalFilters(new AllExceptionsFilter());
 
@@ -235,10 +246,7 @@ describe('Queue – Consumer / NotificationService (e2e)', () => {
   // UUID of a real application seeded into the DB
   let applicationUuid: string;
 
-  function buildMsg(
-    payload: unknown,
-    retryCount = 0,
-  ): amqplib.Message {
+  function buildMsg(payload: unknown, retryCount = 0): amqplib.Message {
     return {
       content: Buffer.from(JSON.stringify(payload)),
       properties: {
@@ -289,11 +297,19 @@ describe('Queue – Consumer / NotificationService (e2e)', () => {
     const applicantEmail = `e2e_applicant_${rand()}@example.com`;
 
     const owner = await prisma.client.user.create({
-      data: { fullname: 'E2E Job Owner (Gilang)', email: ownerEmail, password: 'hashed' },
+      data: {
+        fullname: 'E2E Job Owner (Gilang)',
+        email: ownerEmail,
+        password: 'hashed',
+      },
     });
 
     const applicant = await prisma.client.user.create({
-      data: { fullname: 'E2E Applicant Budi', email: applicantEmail, password: 'hashed' },
+      data: {
+        fullname: 'E2E Applicant Budi',
+        email: applicantEmail,
+        password: 'hashed',
+      },
     });
 
     const company = await prisma.client.company.create({
@@ -389,7 +405,10 @@ describe('Queue – Consumer / NotificationService (e2e)', () => {
 
   it('should nack to DLQ when retryCount is already at max (3)', async () => {
     // Use a UUID that does not exist in DB — triggers error path
-    const msg = buildMsg({ applicationId: '00000000-0000-0000-0000-000000000000' }, 3);
+    const msg = buildMsg(
+      { applicationId: '00000000-0000-0000-0000-000000000000' },
+      3,
+    );
 
     await notificationService.processMessage(msg);
 
@@ -400,13 +419,18 @@ describe('Queue – Consumer / NotificationService (e2e)', () => {
   it('should ack and schedule retry when retryCount < 3 and processing fails', async () => {
     jest
       .spyOn(
-        notificationService as unknown as { delay: (ms: number) => Promise<void> },
+        notificationService as unknown as {
+          delay: (ms: number) => Promise<void>;
+        },
         'delay',
       )
       .mockResolvedValue(undefined);
 
     // Non-existent application UUID with retryCount=0 → ack + republish with count=1
-    const msg = buildMsg({ applicationId: '00000000-0000-0000-0000-000000000001' }, 0);
+    const msg = buildMsg(
+      { applicationId: '00000000-0000-0000-0000-000000000001' },
+      0,
+    );
 
     await notificationService.processMessage(msg);
 

@@ -140,7 +140,9 @@ describe('QueueService', () => {
     });
 
     it('should log a warning and not throw if channel is not available', () => {
-      expect(() => service.publish(QUEUE_NAME, { applicationId: 'x' })).not.toThrow();
+      expect(() =>
+        service.publish(QUEUE_NAME, { applicationId: 'x' }),
+      ).not.toThrow();
     });
   });
 });

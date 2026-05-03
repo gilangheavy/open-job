@@ -3,13 +3,19 @@ import type { CompanyResponseDto } from '../../companies/dto/company-response.dt
 import type { CategoryResponseDto } from '../../categories/dto/category-response.dto';
 
 export class JobResponseDto {
-  @ApiProperty({ example: '01935b1c-a3d4-7c5e-8f9a-0b1c2d3e4f50', description: 'Job UUID' })
+  @ApiProperty({
+    example: '01935b1c-a3d4-7c5e-8f9a-0b1c2d3e4f50',
+    description: 'Job UUID',
+  })
   id!: string;
 
   @ApiProperty({ example: 'Backend Engineer' })
   title!: string;
 
-  @ApiPropertyOptional({ example: 'We are looking for a skilled backend engineer...', nullable: true })
+  @ApiPropertyOptional({
+    example: 'We are looking for a skilled backend engineer...',
+    nullable: true,
+  })
   description!: string | null;
 
   @ApiPropertyOptional({ example: 'Jakarta, Indonesia', nullable: true })

@@ -33,7 +33,11 @@ export class UsersController {
   @Throttle({ default: THROTTLER_LIMITS.strict })
   @ApiOperation({ summary: 'Register a new user account' })
   @ApiBody({ type: CreateUserDto })
-  @ApiResponse({ status: 201, description: 'User registered successfully', type: UserResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered successfully',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email already in use' })
   async register(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
@@ -43,8 +47,16 @@ export class UsersController {
   @Get(':uuid')
   @ApiOperation({ summary: 'Get user by UUID' })
   @ApiParam({ name: 'uuid', description: 'User UUID' })
-  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
-  @ApiResponse({ status: 200, description: 'User found', type: UserResponseDto })
+  @ApiHeader({
+    name: 'X-Data-Source',
+    required: false,
+    description: 'cache | database',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User found',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getProfile(
     @Param('uuid') uuid: string,
