@@ -209,10 +209,15 @@ describe('ApplicationsController', () => {
       service.findByUser.mockRejectedValue(new ForbiddenException('Self only'));
 
       await expect(
-        controller.getByUser(APPLICANT_UUID, mockOwnerUser, {
-          page: 1,
-          limit: 10,
-        }, mockRes),
+        controller.getByUser(
+          APPLICANT_UUID,
+          mockOwnerUser,
+          {
+            page: 1,
+            limit: 10,
+          },
+          mockRes,
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -248,10 +253,15 @@ describe('ApplicationsController', () => {
       );
 
       await expect(
-        controller.getByJob(JOB_UUID, mockApplicantUser, {
-          page: 1,
-          limit: 10,
-        }, mockRes),
+        controller.getByJob(
+          JOB_UUID,
+          mockApplicantUser,
+          {
+            page: 1,
+            limit: 10,
+          },
+          mockRes,
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
   });
