@@ -130,7 +130,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -184,7 +186,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -238,7 +242,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -297,7 +303,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             },
@@ -1009,7 +1017,7 @@
               "script": {
                 "exec": [
                   "const responseJson = pm.response.json();",
-                  "pm.environment.set('documentsAccessToken', responseJson.data.accessToken);"
+                  "pm.environment.set(\"documentsAccessToken\", responseJson.data.accessToken);"
                 ],
                 "type": "text/javascript"
               }
@@ -1032,24 +1040,54 @@
           "response": []
         },
         {
+          "name": "[Setup] - Login Jane for Documents Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "pm.environment.set(\"documentsAccessTokenJane\", responseJson.data.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"jane@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
           "name": "Upload Document without Authentication",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 401 status code', () => {",
+                  "pm.test(\"it should response 401 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(401);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('fail');",
-                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1074,14 +1112,18 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 400 status code', () => {",
+                  "pm.test(\"it should response 400 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('fail');",
-                  "    pm.expect(responseJson.message).to.include('required');",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.include(\"File is required\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1112,14 +1154,18 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 400 status code', () => {",
+                  "pm.test(\"it should response 400 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('fail');",
-                  "    pm.expect(responseJson.message).to.include('File is required');",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1139,8 +1185,8 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "document",
-                  "description": "Upload a non-PDF file (e.g., .txt, .jpg) to test validation",
+                  "key": "file",
+                  "description": "Upload a non-PDF file (e.g., .txt, .jpg) to test MIME type validation",
                   "type": "file",
                   "src": []
                 }
@@ -1157,23 +1203,26 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 201 status code', () => {",
+                  "pm.test(\"it should response 201 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(201);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data).to.be.an('object');",
-                  "    pm.expect(responseJson.data.documentId).to.be.a('string');",
-                  "    pm.expect(responseJson.data.filename).to.be.a('string');",
-                  "    pm.expect(responseJson.data.originalName).to.be.a('string');",
-                  "    pm.expect(responseJson.data.size).to.be.a('number');",
-                  "    pm.environment.set('documentId', responseJson.data.documentId);",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.id).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.userId).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.originalName).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.mimeType).to.equal(\"application/pdf\");",
+                  "    pm.expect(responseJson.data.size).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.presignedUrl).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data).to.not.have.property(\"filename\");",
+                  "    pm.environment.set(\"documentId\", responseJson.data.id);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1193,7 +1242,7 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "document",
+                  "key": "file",
                   "description": "Upload a valid PDF file (max 5MB)",
                   "type": "file",
                   "src": "/home/me/Development/Assets/sample.pdf"
@@ -1211,15 +1260,25 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.documents).to.be.an('array');",
-                  "    pm.expect(responseJson.data.documents.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.items.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.data.meta).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.meta.total).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.meta.page).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.meta.limit).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.meta.totalPages).to.be.a(\"number\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1234,19 +1293,22 @@
           "response": []
         },
         {
-          "name": "Get Document by Id with Invalid Id",
+          "name": "Get All Documents with Pagination",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 404 status code', () => {",
-                  "    pm.expect(pm.response).to.have.status(404);",
+                  "pm.test(\"it should response 200 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct pagination meta\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('fail');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.meta.page).to.equal(1);",
+                  "    pm.expect(responseJson.data.meta.limit).to.equal(5);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1256,27 +1318,121 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseURL}}/documents/xxx"
+            "url": {
+              "raw": "{{baseURL}}/documents?page=1&limit=5",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
           },
           "response": []
         },
         {
-          "name": "Get Document by Id (View/Download PDF)",
+          "name": "Get Document by Id with Invalid Id",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 404 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseURL}}/documents/invalid-uuid-format"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document by Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response Content-Type should be application/pdf', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.equal('application/pdf');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response should have Content-Disposition header', () => {",
-                  "    pm.expect(pm.response.headers.has('Content-Disposition')).to.be.true;",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.id).to.equal(pm.environment.get(\"documentId\"));",
+                  "    pm.expect(responseJson.data.originalName).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.mimeType).to.equal(\"application/pdf\");",
+                  "    pm.expect(responseJson.data.size).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.presignedUrl).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data).to.not.have.property(\"filename\");",
+                  "});",
+                  "",
+                  "pm.test(\"X-Data-Source header should be database on first fetch\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"X-Data-Source\")).to.equal(\"database\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseURL}}/documents/{{documentId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document by Id - Cache Hit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"it should response 200 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"X-Data-Source header should be cache on second fetch\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"X-Data-Source\")).to.equal(\"cache\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.id).to.equal(pm.environment.get(\"documentId\"));",
+                  "    pm.expect(responseJson.data.presignedUrl).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1297,8 +1453,18 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 401 status code', () => {",
+                  "pm.test(\"it should response 401 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1313,19 +1479,100 @@
           "response": []
         },
         {
+          "name": "Delete Document Owned by Another User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"it should response 403 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{documentsAccessTokenJane}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseURL}}/documents/{{documentId}}"
+          },
+          "response": []
+        },
+        {
           "name": "Delete Document with Valid Id",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.message).to.equal(\"Document deleted successfully\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{documentsAccessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseURL}}/documents/{{documentId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Non-existent Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"it should response 404 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -5167,7 +5414,9 @@
             {
               "listen": "test",
               "script": {
-                "exec": [""],
+                "exec": [
+                  ""
+                ],
                 "type": "text/javascript"
               }
             }

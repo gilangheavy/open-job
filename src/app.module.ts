@@ -16,6 +16,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
@@ -50,6 +51,7 @@ import { THROTTLER_LIMITS } from './common/constants/throttler.constants';
     QueueModule,
     ApplicationsModule,
     BookmarksModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [
