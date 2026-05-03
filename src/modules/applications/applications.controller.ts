@@ -12,6 +12,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiHeader,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
@@ -26,13 +35,19 @@ import {
   type PaginatedResult,
 } from '../profile/dto/pagination-query.dto';
 
+@ApiTags('Applications')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
 @Controller('applications')
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Submit a job application' })
+  @ApiResponse({ status: 201, description: 'Application created', type: ApplicationResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 409, description: 'Already applied to this job' })
   create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateApplicationDto,
@@ -41,7 +56,10 @@ export class ApplicationsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List all applications (admin, paginated)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Paginated list of applications' })
   getAll(
     @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<ApplicationResponseDto>> {
@@ -49,7 +67,13 @@ export class ApplicationsController {
   }
 
   @Get('user/:userId')
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List applications by user UUID' })
+  @ApiParam({ name: 'userId', description: 'User UUID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiResponse({ status: 200, description: 'Paginated list of applications for the user' })
+  @ApiResponse({ status: 403, description: 'Forbidden — cannot view another user\'s applications' })
   async getByUser(
     @Param('userId') userId: string,
     @CurrentUser() user: JwtPayload,
@@ -66,7 +90,13 @@ export class ApplicationsController {
   }
 
   @Get('job/:jobId')
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List applications for a job (company owner only)' })
+  @ApiParam({ name: 'jobId', description: 'Job UUID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiResponse({ status: 200, description: 'Paginated list of applications for the job' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the job owner' })
   async getByJob(
     @Param('jobId') jobId: string,
     @CurrentUser() user: JwtPayload,
@@ -83,7 +113,11 @@ export class ApplicationsController {
   }
 
   @Get(':uuid')
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get a single application by UUID' })
+  @ApiParam({ name: 'uuid', description: 'Application UUID' })
+  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiResponse({ status: 200, description: 'Application found', type: ApplicationResponseDto })
+  @ApiResponse({ status: 404, description: 'Application not found' })
   async getById(
     @Param('uuid') uuid: string,
     @CurrentUser() user: JwtPayload,
@@ -99,8 +133,12 @@ export class ApplicationsController {
 
   @Put(':uuid')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiOperation({ summary: 'Update application status (company owner only)' })
+  @ApiParam({ name: 'uuid', description: 'Application UUID' })
+  @ApiResponse({ status: 200, description: 'Application status updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the job owner' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
   async updateStatus(
     @Param('uuid') uuid: string,
     @CurrentUser() user: JwtPayload,
@@ -115,8 +153,12 @@ export class ApplicationsController {
 
   @Delete(':uuid')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiOperation({ summary: 'Withdraw (soft-delete) a job application' })
+  @ApiParam({ name: 'uuid', description: 'Application UUID' })
+  @ApiResponse({ status: 200, description: 'Application deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the applicant' })
+  @ApiResponse({ status: 404, description: 'Application not found' })
   async remove(
     @Param('uuid') uuid: string,
     @CurrentUser() user: JwtPayload,

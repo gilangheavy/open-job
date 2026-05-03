@@ -10,6 +10,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiHeader,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { BookmarksService } from './bookmarks.service';
 import { BookmarkResponseDto } from './dto/bookmark-response.dto';
@@ -22,6 +31,8 @@ import {
   type PaginatedResult,
 } from '../profile/dto/pagination-query.dto';
 
+@ApiTags('Bookmarks')
+@ApiBearerAuth('access-token')
 @Controller()
 export class BookmarksController {
   constructor(private readonly bookmarksService: BookmarksService) {}
@@ -29,6 +40,10 @@ export class BookmarksController {
   @Post('jobs/:jobId/bookmark')
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Bookmark a job' })
+  @ApiParam({ name: 'jobId', description: 'Job UUID' })
+  @ApiResponse({ status: 201, description: 'Job bookmarked', type: BookmarkResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @CurrentUser() user: JwtPayload,
     @Param('jobId') jobId: string,
@@ -40,6 +55,10 @@ export class BookmarksController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiOperation({ summary: 'Remove a job bookmark' })
+  @ApiParam({ name: 'jobId', description: 'Job UUID' })
+  @ApiResponse({ status: 200, description: 'Bookmark removed' })
+  @ApiResponse({ status: 404, description: 'Bookmark not found' })
   async remove(
     @CurrentUser() user: JwtPayload,
     @Param('jobId') jobId: string,
@@ -50,6 +69,11 @@ export class BookmarksController {
 
   @Get('jobs/:jobId/bookmark/:id')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get a specific bookmark by UUID' })
+  @ApiParam({ name: 'jobId', description: 'Job UUID' })
+  @ApiParam({ name: 'id', description: 'Bookmark UUID' })
+  @ApiResponse({ status: 200, description: 'Bookmark found', type: BookmarkResponseDto })
+  @ApiResponse({ status: 404, description: 'Bookmark not found' })
   findOne(
     @CurrentUser() user: JwtPayload,
     @Param('jobId') jobId: string,
@@ -60,6 +84,11 @@ export class BookmarksController {
 
   @Get('bookmarks')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List all bookmarks for the current user (paginated)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiResponse({ status: 200, description: 'Paginated list of bookmarks' })
   async getAll(
     @CurrentUser() user: JwtPayload,
     @Query() query: PaginationQueryDto,

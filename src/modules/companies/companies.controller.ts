@@ -12,6 +12,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiHeader,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -26,11 +35,16 @@ import {
   type PaginatedResult,
 } from '../profile/dto/pagination-query.dto';
 
+@ApiTags('Companies')
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all companies (paginated)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Paginated list of companies' })
   getAll(
     @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<CompanyResponseDto>> {
@@ -38,6 +52,11 @@ export class CompaniesController {
   }
 
   @Get(':uuid')
+  @ApiOperation({ summary: 'Get a company by UUID' })
+  @ApiParam({ name: 'uuid', description: 'Company UUID' })
+  @ApiHeader({ name: 'X-Data-Source', required: false, description: 'cache | database' })
+  @ApiResponse({ status: 200, description: 'Company found', type: CompanyResponseDto })
+  @ApiResponse({ status: 404, description: 'Company not found' })
   async getById(
     @Param('uuid') uuid: string,
     @Res({ passthrough: true }) res: Response,
@@ -50,6 +69,10 @@ export class CompaniesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a new company' })
+  @ApiResponse({ status: 201, description: 'Company created', type: CompanyResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateCompanyDto,
@@ -61,6 +84,12 @@ export class CompaniesController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update a company' })
+  @ApiParam({ name: 'uuid', description: 'Company UUID' })
+  @ApiResponse({ status: 200, description: 'Company updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the owner' })
+  @ApiResponse({ status: 404, description: 'Company not found' })
   async update(
     @Param('uuid') uuid: string,
     @CurrentUser() user: JwtPayload,
@@ -74,6 +103,12 @@ export class CompaniesController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Delete (soft-delete) a company' })
+  @ApiParam({ name: 'uuid', description: 'Company UUID' })
+  @ApiResponse({ status: 200, description: 'Company deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the owner' })
+  @ApiResponse({ status: 404, description: 'Company not found' })
   async remove(
     @Param('uuid') uuid: string,
     @CurrentUser() user: JwtPayload,
