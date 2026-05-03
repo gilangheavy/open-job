@@ -258,15 +258,13 @@ describe('NotificationService', () => {
     });
 
     it('should ack and republish with incremented retry count on transient failure (retryCount=0)', async () => {
-      jest.useFakeTimers();
+      jest.spyOn(service as unknown as { delay: (ms: number) => Promise<void> }, 'delay').mockResolvedValue(undefined);
       prisma.client.application.findUnique.mockRejectedValueOnce(
         new Error('DB error'),
       );
       const msg = makeMessage({ applicationId: APPLICATION_UUID }, 0);
 
-      const processPromise = service.processMessage(msg);
-      jest.runAllTimers();
-      await processPromise;
+      await service.processMessage(msg);
 
       expect(mockChannel.ack).toHaveBeenCalledWith(msg);
       expect(mockChannel.publish).toHaveBeenCalledWith(
@@ -278,19 +276,16 @@ describe('NotificationService', () => {
           persistent: true,
         }),
       );
-      jest.useRealTimers();
     });
 
     it('should ack and republish with incremented retry count on transient failure (retryCount=1)', async () => {
-      jest.useFakeTimers();
+      jest.spyOn(service as unknown as { delay: (ms: number) => Promise<void> }, 'delay').mockResolvedValue(undefined);
       prisma.client.application.findUnique.mockRejectedValueOnce(
         new Error('DB error'),
       );
       const msg = makeMessage({ applicationId: APPLICATION_UUID }, 1);
 
-      const processPromise = service.processMessage(msg);
-      jest.runAllTimers();
-      await processPromise;
+      await service.processMessage(msg);
 
       expect(mockChannel.ack).toHaveBeenCalledWith(msg);
       expect(mockChannel.publish).toHaveBeenCalledWith(
@@ -301,7 +296,6 @@ describe('NotificationService', () => {
           headers: { 'x-retry-count': 2 },
         }),
       );
-      jest.useRealTimers();
     });
 
     it('should nack to DLQ after max retries (retryCount=3)', async () => {
@@ -317,16 +311,12 @@ describe('NotificationService', () => {
     });
 
     it('should nack to DLQ when application is not found in DB', async () => {
-      jest.useFakeTimers();
       prisma.client.application.findUnique.mockResolvedValueOnce(null);
       const msg = makeMessage({ applicationId: APPLICATION_UUID }, 3);
 
-      const processPromise = service.processMessage(msg);
-      jest.runAllTimers();
-      await processPromise;
+      await service.processMessage(msg);
 
       expect(mockChannel.nack).toHaveBeenCalledWith(msg, false, false);
-      jest.useRealTimers();
     });
   });
 });
