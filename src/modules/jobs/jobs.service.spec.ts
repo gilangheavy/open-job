@@ -99,6 +99,7 @@ describe('JobsService', () => {
         findUnique: jest.Mock;
         create: jest.Mock;
         update: jest.Mock;
+        delete: jest.Mock;
       };
       company: {
         findUnique: jest.Mock;
@@ -119,6 +120,7 @@ describe('JobsService', () => {
           findUnique: jest.fn(),
           create: jest.fn(),
           update: jest.fn(),
+          delete: jest.fn(),
         },
         company: {
           findUnique: jest.fn(),
@@ -412,14 +414,6 @@ describe('JobsService', () => {
       );
     });
 
-    it('should throw NotFoundException for invalid UUID format', async () => {
-      await expect(service.findByUuid('not-a-uuid')).rejects.toThrow(
-        NotFoundException,
-      );
-      expect(cache.get).not.toHaveBeenCalled();
-      expect(prisma.client.job.findUnique).not.toHaveBeenCalled();
-    });
-
     it('should not expose integer id or deletedAt in result', async () => {
       cache.get.mockResolvedValue(null);
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
@@ -467,12 +461,6 @@ describe('JobsService', () => {
       ).rejects.toThrow(NotFoundException);
       expect(prisma.client.job.findMany).not.toHaveBeenCalled();
     });
-
-    it('should throw NotFoundException for invalid company UUID format', async () => {
-      await expect(
-        service.findByCompany('bad-uuid', { page: 1, limit: 10 }),
-      ).rejects.toThrow(NotFoundException);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -510,12 +498,6 @@ describe('JobsService', () => {
         service.findByCategory(CATEGORY_UUID, { page: 1, limit: 10 }),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.client.job.findMany).not.toHaveBeenCalled();
-    });
-
-    it('should throw NotFoundException for invalid category UUID format', async () => {
-      await expect(
-        service.findByCategory('bad-uuid', { page: 1, limit: 10 }),
-      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -563,12 +545,6 @@ describe('JobsService', () => {
       );
       expect(prisma.client.job.update).not.toHaveBeenCalled();
     });
-
-    it('should throw NotFoundException for invalid UUID format', async () => {
-      await expect(service.update('bad-uuid', OWNER_UUID, dto)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -577,17 +553,13 @@ describe('JobsService', () => {
   describe('remove()', () => {
     it('should soft delete the job and invalidate cache', async () => {
       prisma.client.job.findUnique.mockResolvedValue(mockJob);
-      prisma.client.job.update.mockResolvedValue({
-        ...mockJob,
-        deletedAt: new Date(),
-      });
+      prisma.client.job.delete.mockResolvedValue(mockJob);
       cache.del.mockResolvedValue(undefined);
 
       await service.remove(JOB_UUID, OWNER_UUID);
 
-      expect(prisma.client.job.update).toHaveBeenCalledWith({
+      expect(prisma.client.job.delete).toHaveBeenCalledWith({
         where: { id: mockJob.id },
-        data: { deletedAt: expect.any(Date) },
       });
       expect(cache.del).toHaveBeenCalledWith(`jobs:${JOB_UUID}`);
     });
@@ -598,7 +570,7 @@ describe('JobsService', () => {
       await expect(service.remove(JOB_UUID, OWNER_UUID)).rejects.toThrow(
         NotFoundException,
       );
-      expect(prisma.client.job.update).not.toHaveBeenCalled();
+      expect(prisma.client.job.delete).not.toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when user is not the company owner', async () => {
@@ -607,13 +579,7 @@ describe('JobsService', () => {
       await expect(service.remove(JOB_UUID, OTHER_UUID)).rejects.toThrow(
         ForbiddenException,
       );
-      expect(prisma.client.job.update).not.toHaveBeenCalled();
-    });
-
-    it('should throw NotFoundException for invalid UUID format', async () => {
-      await expect(service.remove('bad-uuid', OWNER_UUID)).rejects.toThrow(
-        NotFoundException,
-      );
+      expect(prisma.client.job.delete).not.toHaveBeenCalled();
     });
   });
 

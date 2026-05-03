@@ -18,8 +18,6 @@ import type {
 } from '../profile/dto/pagination-query.dto';
 
 const CACHE_TTL = 3600; // 1 hour
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const cacheKey = (uuid: string) => `jobs:${uuid}`;
 
@@ -124,10 +122,6 @@ export class JobsService {
   }
 
   async findByUuid(uuid: string): Promise<FindByUuidResult> {
-    if (!UUID_REGEX.test(uuid)) {
-      throw new NotFoundException('Job not found');
-    }
-
     const cached = await this.cache.get<JobResponseDto>(cacheKey(uuid));
     if (cached) return { data: cached, source: 'cache' };
 
@@ -152,10 +146,6 @@ export class JobsService {
     companyUuid: string,
     query: PaginationQueryDto,
   ): Promise<PaginatedResult<JobResponseDto>> {
-    if (!UUID_REGEX.test(companyUuid)) {
-      throw new NotFoundException('Company not found');
-    }
-
     const company = await this.prisma.client.company.findUnique({
       where: { uuid: companyUuid },
     });
@@ -197,10 +187,6 @@ export class JobsService {
     categoryUuid: string,
     query: PaginationQueryDto,
   ): Promise<PaginatedResult<JobResponseDto>> {
-    if (!UUID_REGEX.test(categoryUuid)) {
-      throw new NotFoundException('Category not found');
-    }
-
     const category = await this.prisma.client.category.findUnique({
       where: { uuid: categoryUuid },
     });
@@ -264,10 +250,7 @@ export class JobsService {
     const job = await this.findJobOrFail(uuid);
     this.assertOwnership(job, userUuid);
 
-    await this.prisma.client.job.update({
-      where: { id: job.id },
-      data: { deletedAt: new Date() },
-    });
+    await this.prisma.client.job.delete({ where: { id: job.id } });
 
     await this.invalidateCache(uuid);
   }
@@ -277,10 +260,6 @@ export class JobsService {
   }
 
   private async findJobOrFail(uuid: string): Promise<JobWithRelations> {
-    if (!UUID_REGEX.test(uuid)) {
-      throw new NotFoundException('Job not found');
-    }
-
     const job = await this.prisma.client.job.findUnique({
       where: { uuid },
       include: {

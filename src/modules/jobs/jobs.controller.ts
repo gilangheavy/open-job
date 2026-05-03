@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -42,7 +43,7 @@ export class JobsController {
   // NestJS / Express route-matching conflicts.
   @Get('company/:companyId')
   getByCompany(
-    @Param('companyId') companyId: string,
+    @Param('companyId', ParseUUIDPipe) companyId: string,
     @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<JobResponseDto>> {
     return this.jobsService.findByCompany(companyId, query);
@@ -50,7 +51,7 @@ export class JobsController {
 
   @Get('category/:categoryId')
   getByCategory(
-    @Param('categoryId') categoryId: string,
+    @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<JobResponseDto>> {
     return this.jobsService.findByCategory(categoryId, query);
@@ -58,7 +59,7 @@ export class JobsController {
 
   @Get(':uuid')
   async getById(
-    @Param('uuid') uuid: string,
+    @Param('uuid', ParseUUIDPipe) uuid: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<JobResponseDto> {
     const { data, source } = await this.jobsService.findByUuid(uuid);
@@ -81,7 +82,7 @@ export class JobsController {
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
   async update(
-    @Param('uuid') uuid: string,
+    @Param('uuid', ParseUUIDPipe) uuid: string,
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateJobDto,
   ): Promise<{ status: string; message: string }> {
@@ -94,7 +95,7 @@ export class JobsController {
   @UseGuards(JwtAuthGuard)
   @SkipTransform()
   async remove(
-    @Param('uuid') uuid: string,
+    @Param('uuid', ParseUUIDPipe) uuid: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<{ status: string; message: string }> {
     await this.jobsService.remove(uuid, user.id);
