@@ -7,6 +7,808 @@
   },
   "item": [
     {
+      "name": "Authentications",
+      "item": [
+        {
+          "name": "[Setup] - Add User John",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullname\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/users"
+          },
+          "response": []
+        },
+        {
+          "name": "[Setup] - Add User Jane",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullname\": \"Jane\",\n    \"email\": \"jane@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/users"
+          },
+          "response": []
+        },
+        {
+          "name": "Login with Invalid Payload",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "let badLoginPayloads = pm.environment.get('badLoginPayloads');\r",
+                  "\r",
+                  "if (!badLoginPayloads | badLoginPayloads.length === 0) {\r",
+                  "    badLoginPayloads = [\r",
+                  "        {},\r",
+                  "        { email: true },\r",
+                  "        { email: 'dicoding@dicoding.com' },\r",
+                  "        { email: 'dicoding', password: true }\r",
+                  "    ];\r",
+                  "}\r",
+                  "\r",
+                  "const currentBadLoginPayload = badLoginPayloads.shift();\r",
+                  "pm.environment.set('currentBadLoginPayload', JSON.stringify(currentBadLoginPayload));\r",
+                  "pm.environment.set('badLoginPayloads', badLoginPayloads);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "})\r",
+                  "\r",
+                  "const repeatRequestUntilDatasetEmpty = () => {\r",
+                  "    const badLoginPayloads = pm.environment.get('badLoginPayloads');\r",
+                  " \r",
+                  "    if(badLoginPayloads && badLoginPayloads.length > 0) {\r",
+                  "        postman.setNextRequest('Login with Invalid Payload');\r",
+                  "    }\r",
+                  "}\r",
+                  " \r",
+                  "repeatRequestUntilDatasetEmpty();"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{currentBadLoginPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Login with Not Found User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 401 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"smith@gmail.com\",\r\n    \"password\": \"xxx\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Login with Invalid Password",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 401 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"john@example.com\",\r\n    \"password\": \"xxx\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Login with User John",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 200 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    pm.expect(responseJson.data).to.be.an('object');\r",
+                  "    pm.expect(responseJson.data.accessToken).to.be.a('string');\r",
+                  "    pm.expect(responseJson.data.refreshToken).to.be.a('string');\r",
+                  "    \r",
+                  "    pm.environment.set('accessTokenJohn', responseJson.data.accessToken);\r",
+                  "    pm.environment.set('refreshTokenJohn', responseJson.data.refreshToken);\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"john@example.com\",\r\n    \"password\": \"password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Login with User Jane",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 200 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    pm.expect(responseJson.data).to.be.an('object');\r",
+                  "    pm.expect(responseJson.data.accessToken).to.be.a('string');\r",
+                  "    pm.expect(responseJson.data.refreshToken).to.be.a('string');\r",
+                  "    \r",
+                  "    pm.environment.set('accessTokenJane', responseJson.data.accessToken);\r",
+                  "    pm.environment.set('refreshTokenJane', responseJson.data.refreshToken);\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"jane@example.com\",\r\n    \"password\": \"password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Authentication with Invalid Payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "})"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Authentication with Invalid Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"xxxx\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Authentication with John Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{accessTokenJohn}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Authentication John Authentication",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 200 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    pm.expect(responseJson.data).to.be.an('object');\r",
+                  "    pm.expect(responseJson.data.accessToken).to.be.a('string');\r",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJohn}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authentication with Invalid Payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "})"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authentication with Invalid Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    ",
+                  "})"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"xxx\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authentication John Authentication",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 200 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "})"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJohn}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authentication Jane Authentication",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 200 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('success');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "})"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJane}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Authentication with Deleted Authentication",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('it should response 400 status code', () => {\r",
+                  "    pm.expect(pm.response).to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response Content-Type header should have application/json value', () => {\r",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
+                  "}); \r",
+                  "\r",
+                  "pm.test('response body should an object', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "    pm.expect(responseJson).to.be.an('object');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('response body have correct property and value', () => {\r",
+                  "    const responseJson = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(responseJson.status).to.equal('fail');\r",
+                  "    pm.expect(responseJson.message).to.be.a('string');\r",
+                  "})"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJohn}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseURL}}/authentications"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Users",
       "item": [
         {
@@ -254,7 +1056,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -286,7 +1088,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.include('required');",
                   "});"
                 ],
@@ -324,7 +1126,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.include('File is required');",
                   "});"
                 ],
@@ -452,7 +1254,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1626,6 +2428,16 @@
                 ],
                 "type": "text/javascript"
               }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.environment.set('updatedCategoryName', 'SoftwareDev_' + ts);"
+                ]
+              }
             }
           ],
           "request": {
@@ -1639,7 +2451,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Software Development\"\n}",
+              "raw": "{\n    \"name\": \"{{updatedCategoryName}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1701,7 +2513,7 @@
               "script": {
                 "exec": [
                   "const responseJson = pm.response.json();",
-                  "pm.environment.set('jobCompanyId', responseJson.data.id);"
+                  "pm.environment.set(\"jobCompanyId\", responseJson.data.id);"
                 ],
                 "type": "text/javascript"
               }
@@ -1737,9 +2549,19 @@
               "script": {
                 "exec": [
                   "const responseJson = pm.response.json();",
-                  "pm.environment.set('jobCategoryId', responseJson.data.id);"
+                  "pm.environment.set(\"jobCategoryId\", responseJson.data.id);"
                 ],
                 "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.environment.set('jobCategoryName', 'JobsCat_' + ts);"
+                ]
               }
             }
           ],
@@ -1754,7 +2576,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Backend Developer\"\n}",
+              "raw": "{\n    \"name\": \"{{jobCategoryName}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1772,23 +2594,23 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 401 status code', () => {",
+                  "pm.test(\"it should response 401 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(401);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"response body should be an object\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
+                  "    pm.expect(responseJson).to.be.an(\"object\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
-                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1818,23 +2640,23 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 401 status code', () => {",
+                  "pm.test(\"it should response 401 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(401);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"response body should be an object\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
+                  "    pm.expect(responseJson).to.be.an(\"object\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
-                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1864,23 +2686,23 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 401 status code', () => {",
+                  "pm.test(\"it should response 401 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(401);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"response body should be an object\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
+                  "    pm.expect(responseJson).to.be.an(\"object\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
-                  "    pm.expect(responseJson.message).to.be.a('string');",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1901,19 +2723,19 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "let badJobPayloads = pm.environment.get('badJobPayloads');",
+                  "let badJobPayloads = pm.environment.get(\"badJobPayloads\");",
                   "",
                   "if (!badJobPayloads || badJobPayloads.length === 0) {",
                   "    badJobPayloads = [",
                   "        {},",
-                  "        { title: 'Backend Developer' },",
-                  "        { title: 'Backend Developer', company_id: 'xxx' }",
+                  "        { title: \"Backend Developer\", type: \"full-time\" },",
+                  "        { title: \"Backend Developer\", companyId: \"not-a-uuid\", categoryId: \"not-a-uuid\", type: \"full-time\" }",
                   "    ]",
                   "}",
                   "",
                   "const currentBadJobPayload = badJobPayloads.shift();",
-                  "pm.environment.set('currentBadJobPayload', JSON.stringify(currentBadJobPayload));",
-                  "pm.environment.set('badJobPayloads', badJobPayloads);"
+                  "pm.environment.set(\"currentBadJobPayload\", JSON.stringify(currentBadJobPayload));",
+                  "pm.environment.set(\"badJobPayloads\", badJobPayloads);"
                 ],
                 "type": "text/javascript"
               }
@@ -1922,14 +2744,20 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 400 status code', () => {",
+                  "pm.test(\"it should response 400 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(400);",
                   "});",
                   "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
+                  "});",
+                  "",
                   "const repeatRequestUntilDatasetEmpty = () => {",
-                  "    const badJobPayloads = pm.environment.get('badJobPayloads');",
+                  "    const badJobPayloads = pm.environment.get(\"badJobPayloads\");",
                   "    if(badJobPayloads && badJobPayloads.length > 0) {",
-                  "        postman.setNextRequest('Add Job with Invalid Payload');",
+                  "        postman.setNextRequest(\"Add Job with Invalid Payload\");",
                   "    }",
                   "};",
                   "",
@@ -1968,15 +2796,24 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 201 status code', () => {",
+                  "pm.test(\"it should response 201 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(201);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.id).to.be.a('string');",
-                  "    pm.environment.set('jobId', responseJson.data.id);",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.id).to.be.a(\"string\");",
+                  "    pm.expect(responseJson.data.title).to.equal(\"Senior Backend Developer\");",
+                  "    pm.expect(responseJson.data.type).to.equal(\"full-time\");",
+                  "    pm.expect(responseJson.data.company).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.category).to.be.an(\"object\");",
+                  "    pm.environment.set(\"jobId\", responseJson.data.id);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1994,7 +2831,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"company_id\": \"{{jobCompanyId}}\",\n    \"category_id\": \"{{jobCategoryId}}\",\n    \"title\": \"Senior Backend Developer\",\n    \"description\": \"We are looking for experienced backend developer\",\n    \"job_type\": \"full-time\",\n    \"experience_level\": \"senior\",\n    \"location_type\": \"remote\",\n    \"location_city\": \"Jakarta\",\n    \"salary_min\": 15000000,\n    \"salary_max\": 25000000,\n    \"is_salary_visible\": true,\n    \"status\": \"open\"\n}",
+              "raw": "{\n    \"companyId\": \"{{jobCompanyId}}\",\n    \"categoryId\": \"{{jobCategoryId}}\",\n    \"title\": \"Senior Backend Developer\",\n    \"description\": \"We are looking for an experienced backend developer\",\n    \"location\": \"Jakarta\",\n    \"salary\": 15000000,\n    \"type\": \"full-time\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2012,15 +2849,23 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "    pm.expect(responseJson.data.jobs.length).to.be.at.least(1);",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.meta.total).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.meta.page).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.meta.limit).to.be.a(\"number\");",
+                  "    pm.expect(responseJson.data.items.length).to.be.at.least(1);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2041,31 +2886,25 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"all returned jobs should contain the search title\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('all returned jobs should contain the search title', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    const searchTitle = 'Backend';",
-                  "    ",
-                  "    if (responseJson.data.jobs.length > 0) {",
-                  "        responseJson.data.jobs.forEach(job => {",
+                  "    const searchTitle = \"Backend\";",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(job => {",
                   "            pm.expect(job.title.toLowerCase()).to.include(searchTitle.toLowerCase());",
                   "        });",
                   "    }",
@@ -2089,32 +2928,26 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"all returned jobs should be from the searched company\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('all returned jobs should be from the searched company', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    const searchCompany = 'Tech Corp';",
-                  "    ",
-                  "    if (responseJson.data.jobs.length > 0) {",
-                  "        responseJson.data.jobs.forEach(job => {",
-                  "            pm.expect(job.company_name.toLowerCase()).to.include(searchCompany.toLowerCase());",
+                  "    const searchCompany = \"Job Test\";",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(job => {",
+                  "            pm.expect(job.company.name.toLowerCase()).to.include(searchCompany.toLowerCase());",
                   "        });",
                   "    }",
                   "});"
@@ -2126,7 +2959,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseURL}}/jobs?company-name=Tech Corp"
+            "url": "{{baseURL}}/jobs?company-name=Job Test"
           },
           "response": []
         },
@@ -2137,34 +2970,28 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"all returned jobs should match both title and company criteria\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('all returned jobs should match both title and company criteria', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    const searchTitle = 'Developer';",
-                  "    const searchCompany = 'Tech';",
-                  "    ",
-                  "    if (responseJson.data.jobs.length > 0) {",
-                  "        responseJson.data.jobs.forEach(job => {",
+                  "    const searchTitle = \"Backend\";",
+                  "    const searchCompany = \"Job Test\";",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(job => {",
                   "            pm.expect(job.title.toLowerCase()).to.include(searchTitle.toLowerCase());",
-                  "            pm.expect(job.company_name.toLowerCase()).to.include(searchCompany.toLowerCase());",
+                  "            pm.expect(job.company.name.toLowerCase()).to.include(searchCompany.toLowerCase());",
                   "        });",
                   "    }",
                   "});"
@@ -2176,7 +3003,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseURL}}/jobs?title=Developer&company-name=Tech"
+            "url": "{{baseURL}}/jobs?title=Backend&company-name=Job Test"
           },
           "response": []
         },
@@ -2187,28 +3014,20 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"should return empty array for non-existent search\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
-                  "});",
-                  "",
-                  "pm.test('response body should have correct property and value', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('should return empty array for non-existent search', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.data.jobs).to.have.lengthOf(0);",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.items).to.have.lengthOf(0);",
+                  "    pm.expect(responseJson.data.meta.total).to.equal(0);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2229,29 +3048,19 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response Content-Type header should have application/json value', () => {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
                   "});",
                   "",
-                  "pm.test('response body should be an object', () => {",
+                  "pm.test(\"should return paginated jobs when query is empty\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('object');",
-                  "});",
-                  "",
-                  "pm.test('response body should have correct property and value', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('should return all jobs when query is empty', () => {",
-                  "    const responseJson = pm.response.json();",
-                  "    // Should return all jobs, so length should be at least 1 if there are jobs",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.meta.total).to.be.a(\"number\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2272,15 +3081,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
-                  "    pm.expect(pm.response).to.have.status(200);",
+                  "pm.test(\"it should response 404 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "    pm.expect(responseJson.data.jobs).to.have.lengthOf(0);",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2301,19 +3109,19 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    const companyId = pm.environment.get('jobCompanyId');",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "    ",
-                  "    if (responseJson.data.jobs.length > 0) {",
-                  "        responseJson.data.jobs.forEach(job => {",
-                  "            pm.expect(job.company_id).to.equal(companyId);",
+                  "    const companyId = pm.environment.get(\"jobCompanyId\");",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.items.length).to.be.at.least(1);",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(job => {",
+                  "            pm.expect(job.company.id).to.equal(companyId);",
                   "        });",
                   "    }",
                   "});"
@@ -2336,15 +3144,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
-                  "    pm.expect(pm.response).to.have.status(200);",
+                  "pm.test(\"it should response 404 status code\", () => {",
+                  "    pm.expect(pm.response).to.have.status(404);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "    pm.expect(responseJson.data.jobs).to.have.lengthOf(0);",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2365,19 +3172,19 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    const categoryId = pm.environment.get('jobCategoryId');",
-                  "    pm.expect(responseJson.status).to.equal('success');",
-                  "    pm.expect(responseJson.data.jobs).to.be.an('array');",
-                  "    ",
-                  "    if (responseJson.data.jobs.length > 0) {",
-                  "        responseJson.data.jobs.forEach(job => {",
-                  "            pm.expect(job.category_id).to.equal(categoryId);",
+                  "    const categoryId = pm.environment.get(\"jobCategoryId\");",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.data.items).to.be.an(\"array\");",
+                  "    pm.expect(responseJson.data.items.length).to.be.at.least(1);",
+                  "    if (responseJson.data.items.length > 0) {",
+                  "        responseJson.data.items.forEach(job => {",
+                  "            pm.expect(job.category.id).to.equal(categoryId);",
                   "        });",
                   "    }",
                   "});"
@@ -2400,8 +3207,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 404 status code', () => {",
+                  "pm.test(\"it should response 404 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"fail\");",
+                  "    pm.expect(responseJson.message).to.be.a(\"string\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2422,16 +3235,28 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('response body should have correct property and value', () => {",
+                  "pm.test(\"response Content-Type header should have application/json value\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.includes(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"response should include X-Data-Source header\", () => {",
+                  "    const dataSource = pm.response.headers.get(\"X-Data-Source\");",
+                  "    pm.expect([\"database\", \"cache\"]).to.include(dataSource);",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
                   "    const responseJson = pm.response.json();",
-                  "    const jobId = pm.environment.get('jobId');",
-                  "    pm.expect(responseJson.status).to.equal('success');",
+                  "    const jobId = pm.environment.get(\"jobId\");",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
                   "    pm.expect(responseJson.data.id).to.equal(jobId);",
-                  "    pm.expect(responseJson.data.title).to.equal('Senior Backend Developer');",
+                  "    pm.expect(responseJson.data.title).to.equal(\"Senior Backend Developer\");",
+                  "    pm.expect(responseJson.data.type).to.equal(\"full-time\");",
+                  "    pm.expect(responseJson.data.company).to.be.an(\"object\");",
+                  "    pm.expect(responseJson.data.category).to.be.an(\"object\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2452,8 +3277,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.message).to.equal(\"Job updated successfully\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2471,7 +3302,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"title\": \"Lead Backend Developer\",\n    \"description\": \"Updated job description\",\n    \"salary_max\": 30000000\n}",
+              "raw": "{\n    \"title\": \"Lead Backend Developer\",\n    \"description\": \"Updated job description\",\n    \"salary\": 30000000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2489,8 +3320,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('it should response 200 status code', () => {",
+                  "pm.test(\"it should response 200 status code\", () => {",
                   "    pm.expect(pm.response).to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"response body should have correct property and value\", () => {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.status).to.equal(\"success\");",
+                  "    pm.expect(responseJson.message).to.equal(\"Job deleted successfully\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2573,7 +3410,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -2619,7 +3456,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -2656,7 +3493,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -2949,7 +3786,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -2977,7 +3814,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -3120,7 +3957,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -3166,7 +4003,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -3203,7 +4040,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -3310,7 +4147,7 @@
                   "",
                   "pm.test('response body should have correct property and value', () => {",
                   "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.status).to.equal('failed');",
+                  "    pm.expect(responseJson.status).to.equal('fail');",
                   "    pm.expect(responseJson.message).to.be.a('string');",
                   "});"
                 ],
@@ -3391,808 +4228,6 @@
               }
             ],
             "url": "{{baseURL}}/jobs/{{jobId}}/bookmark"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Authentications",
-      "item": [
-        {
-          "name": "[Setup] - Add User John",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"fullname\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/users"
-          },
-          "response": []
-        },
-        {
-          "name": "[Setup] - Add User Jane",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"fullname\": \"Jane\",\n    \"email\": \"jane@example.com\",\n    \"password\": \"password123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/users"
-          },
-          "response": []
-        },
-        {
-          "name": "Login with Invalid Payload",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  "let badLoginPayloads = pm.environment.get('badLoginPayloads');\r",
-                  "\r",
-                  "if (!badLoginPayloads | badLoginPayloads.length === 0) {\r",
-                  "    badLoginPayloads = [\r",
-                  "        {},\r",
-                  "        { email: true },\r",
-                  "        { email: 'dicoding@dicoding.com' },\r",
-                  "        { email: 'dicoding', password: true }\r",
-                  "    ];\r",
-                  "}\r",
-                  "\r",
-                  "const currentBadLoginPayload = badLoginPayloads.shift();\r",
-                  "pm.environment.set('currentBadLoginPayload', JSON.stringify(currentBadLoginPayload));\r",
-                  "pm.environment.set('badLoginPayloads', badLoginPayloads);"
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "})\r",
-                  "\r",
-                  "const repeatRequestUntilDatasetEmpty = () => {\r",
-                  "    const badLoginPayloads = pm.environment.get('badLoginPayloads');\r",
-                  " \r",
-                  "    if(badLoginPayloads && badLoginPayloads.length > 0) {\r",
-                  "        postman.setNextRequest('Login with Invalid Payload');\r",
-                  "    }\r",
-                  "}\r",
-                  " \r",
-                  "repeatRequestUntilDatasetEmpty();"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{{currentBadLoginPayload}}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Login with Not Found User",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 401 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(401);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"email\": \"smith@gmail.com\",\r\n    \"password\": \"xxx\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Login with Invalid Password",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 401 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(401);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"email\": \"john@example.com\",\r\n    \"password\": \"xxx\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Login with User John",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(201);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('success');\r",
-                  "    pm.expect(responseJson.data).to.be.an('object');\r",
-                  "    pm.expect(responseJson.data.accessToken).to.be.a('string');\r",
-                  "    pm.expect(responseJson.data.refreshToken).to.be.a('string');\r",
-                  "    \r",
-                  "    pm.environment.set('accessTokenJohn', responseJson.data.accessToken);\r",
-                  "    pm.environment.set('refreshTokenJohn', responseJson.data.refreshToken);\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"email\": \"john@example.com\",\r\n    \"password\": \"password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Login with User Jane",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(201);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('success');\r",
-                  "    pm.expect(responseJson.data).to.be.an('object');\r",
-                  "    pm.expect(responseJson.data.accessToken).to.be.a('string');\r",
-                  "    pm.expect(responseJson.data.refreshToken).to.be.a('string');\r",
-                  "    \r",
-                  "    pm.environment.set('accessTokenJane', responseJson.data.accessToken);\r",
-                  "    pm.environment.set('refreshTokenJane', responseJson.data.refreshToken);\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"email\": \"jane@example.com\",\r\n    \"password\": \"password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Authentication with Invalid Payload",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "})"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Authentication with Invalid Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(401);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"xxxx\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Authentication with John Access Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(401);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{accessTokenJohn}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Authentication John Authentication",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(200);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('success');\r",
-                  "    pm.expect(responseJson.data).to.be.an('object');\r",
-                  "    pm.expect(responseJson.data.accessToken).to.be.a('string');\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJohn}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Authentication with Invalid Payload",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(400);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "})"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Authentication with Invalid Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(200);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('success');\r",
-                  "    ",
-                  "})"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"xxx\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Authentication John Authentication",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(200);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('success');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "})"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJohn}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Authentication Jane Authentication",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 200 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(200);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('success');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "})"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJane}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Authentication with Deleted Authentication",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('it should response 400 status code', () => {\r",
-                  "    pm.expect(pm.response).to.have.status(401);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response Content-Type header should have application/json value', () => {\r",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.includes('application/json');\r",
-                  "}); \r",
-                  "\r",
-                  "pm.test('response body should an object', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "    pm.expect(responseJson).to.be.an('object');\r",
-                  "});\r",
-                  "\r",
-                  "pm.test('response body have correct property and value', () => {\r",
-                  "    const responseJson = pm.response.json();\r",
-                  "\r",
-                  "    pm.expect(responseJson.status).to.equal('fail');\r",
-                  "    pm.expect(responseJson.message).to.be.a('string');\r",
-                  "})"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{refreshTokenJohn}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseURL}}/authentications"
           },
           "response": []
         }
@@ -5421,7 +5456,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Job Owner\",\n  \"email\": \"gilangheavy@gmail.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}"
+              "raw": "{\n  \"email\": \"gilangheavy@gmail.com\",\n  \"password\": \"password123\",\n  \"fullname\": \"Job Owner\"\n}"
             },
             "url": "{{baseURL}}/users"
           },
@@ -5456,7 +5491,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Job Applicant\",\n  \"email\": \"applicant@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}"
+              "raw": "{\n  \"email\": \"applicant@example.com\",\n  \"password\": \"password123\",\n  \"fullname\": \"Job Applicant\"\n}"
             },
             "url": "{{baseURL}}/users"
           },
@@ -5470,7 +5505,7 @@
               "script": {
                 "exec": [
                   "pm.test('Login owner - status 200', () => {",
-                  "    pm.expect(pm.response).to.have.status(200);",
+                  "    pm.expect(pm.response).to.have.status(201);",
                   "});",
                   "const json = pm.response.json();",
                   "pm.environment.set('ownerAccessToken', json.data.accessToken);",
@@ -5504,7 +5539,7 @@
               "script": {
                 "exec": [
                   "pm.test('Login applicant - status 200', () => {",
-                  "    pm.expect(pm.response).to.have.status(200);",
+                  "    pm.expect(pm.response).to.have.status(201);",
                   "});",
                   "const json = pm.response.json();",
                   "pm.environment.set('applicantAccessToken', json.data.accessToken);"
@@ -5782,7 +5817,7 @@
                   "",
                   "pm.test('Error message indicates duplicate', () => {",
                   "    const json = pm.response.json();",
-                  "    pm.expect(json.status).to.equal('failed');",
+                  "    pm.expect(json.status).to.equal('fail');",
                   "    pm.expect(json.message).to.be.a('string');",
                   "});"
                 ],
@@ -5861,7 +5896,7 @@
                   "",
                   "pm.test('No message published for unauthorized request', () => {",
                   "    const json = pm.response.json();",
-                  "    pm.expect(json.status).to.equal('failed');",
+                  "    pm.expect(json.status).to.equal('fail');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -5897,7 +5932,7 @@
                   "",
                   "pm.test('Response has failed status', () => {",
                   "    const json = pm.response.json();",
-                  "    pm.expect(json.status).to.equal('failed');",
+                  "    pm.expect(json.status).to.equal('fail');",
                   "});"
                 ],
                 "type": "text/javascript"
